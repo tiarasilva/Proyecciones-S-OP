@@ -24,11 +24,8 @@ for row in ws_parametros_time.iter_rows(2, ws_parametros_time.max_row, values_on
   oficina = row[1]
   tiempo_transito = row[2]
   dict_parametros_venta[venta_iteracion][oficina] = tiempo_transito
-
-  # print(row)
-# print(dict_parametros_venta)
-
 wb_parametros.close()
+
 # ----- 2. Creamos el excel de resultados
 wb = Workbook()
 
@@ -36,6 +33,13 @@ for office in dict_parametros_venta[tipo_venta.lower()]:
   ws = wb.create_sheet(office)
   ws.append(['Sector', 'Material', 'Venta plan', 'Stock planta', 'Puerto Chile', 'Centro Agua', 'Puerto Oficina', 'Almacen oficina','Pesimista Proy.', 'Optimista. Proy.'])
   run_styles(ws)
+
+# ----- 3. Leemos Venta actual
+wb_venta = load_workbook(filename_venta, data_only = True, read_only = True)
+ws_venta = wb['Venta - Plan']
+
+for row in ws_venta.iter_rows(2, ws_venta.max_row, values_only=True):
+  print(row)
 
 wb.save(filename)
 wb.close()

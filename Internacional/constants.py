@@ -1,6 +1,7 @@
 # Nombre de los archivos
 filename = 'Rango proyecciones.xlsx'
-filename_parametros = 'parametros.xlsx'
+filename_parametros = 'Inputs/parametros.xlsx'
+filename_venta = 'Inputs/Venta - Plan.xlsx'
 
 # Definición de colores
 grey = 'aaabac'
