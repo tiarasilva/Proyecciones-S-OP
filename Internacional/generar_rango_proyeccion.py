@@ -3,7 +3,7 @@ from constants import *
 
 # ----- 1. Abrimos el excel de los parametros
 wb_parametros = load_workbook(filename_parametros, data_only = True, read_only = True)
-ws_parametros_time = wb_parametros['Tiempo']
+ws_parametros_time = wb_parametros['Lead time']
 ws_parametros_venta = wb_parametros['Venta']
 
 tipo_venta = ws_parametros_venta['B1'].value
@@ -30,7 +30,7 @@ wb = Workbook()
 
 for office in dict_parametros_venta[tipo_venta.lower()]:
   ws = wb.create_sheet(office)
-  ws.append(['Material', 'Pesimista Proy.', 'Optimista. Proy.', 'Pesimista Precio', 'Optimista Precio'])
+  ws.append(['Material', 'Stock planta', 'Puerto Chile', 'Centro Agua', 'Puerto Oficina', 'Almacen oficina','Pesimista Proy.', 'Optimista. Proy.'])
 
 wb.save(filename)
 wb.close()
