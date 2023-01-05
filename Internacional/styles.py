@@ -10,3 +10,7 @@ def run_styles(ws):
     ws[f'{get_column_letter(i)}1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'{get_column_letter(i)}1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
     ws[f'{get_column_letter(i)}1'].fill = PatternFill("solid", fgColor=lightBlue)
+
+  # tamaños
+  ws.column_dimensions['C'].width = 25
+  ws.column_dimensions['D'].width = 12

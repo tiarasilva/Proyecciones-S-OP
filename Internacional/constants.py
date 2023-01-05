@@ -2,6 +2,7 @@
 filename = 'Rango proyecciones.xlsx'
 filename_parametros = 'Inputs/parametros.xlsx'
 filename_venta = 'Inputs/Venta - Plan.xlsx'
+filename_puerto = 'Inputs/Stock puerto.xlsx'
 
 # Definición de colores
 grey = 'aaabac'
