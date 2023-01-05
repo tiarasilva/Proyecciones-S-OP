@@ -1,5 +1,9 @@
 from openpyxl import Workbook, load_workbook
+
+from styles import run_styles
 from constants import *
+import time
+start_time = time.time()
 
 # ----- 1. Abrimos el excel de los parametros
 wb_parametros = load_workbook(filename_parametros, data_only = True, read_only = True)
@@ -30,7 +34,9 @@ wb = Workbook()
 
 for office in dict_parametros_venta[tipo_venta.lower()]:
   ws = wb.create_sheet(office)
-  ws.append(['Material', 'Stock planta', 'Puerto Chile', 'Centro Agua', 'Puerto Oficina', 'Almacen oficina','Pesimista Proy.', 'Optimista. Proy.'])
+  ws.append(['Sector', 'Material', 'Venta plan', 'Stock planta', 'Puerto Chile', 'Centro Agua', 'Puerto Oficina', 'Almacen oficina','Pesimista Proy.', 'Optimista. Proy.'])
+  run_styles(ws)
 
 wb.save(filename)
 wb.close()
+print("--- %s seconds ---" % (time.time() - start_time))
