@@ -67,7 +67,20 @@ dict_almacen = {}
 dict_puerto = {}
 
 ws_stock_puerto = wb.create_sheet('Stock - Puerto')
-ws_stock_puerto.append({ 1: 'Sector', 2: 'Oficina', 3: 'Material', 4: 'Descripción', 5: 'Nivel 2', 6: 'Puerto Chile', 9: 'Fechas', 11: 'Centro Agua', 14: 'Fechas', 16: 'Puerto Oficina', 19: 'Fechas', 21: 'Almacén Oficina', 24: 'Fechas' })
+ws_stock_puerto.append({ 1: 'Sector', 
+  2: 'Oficina', 
+  3: 'Material', 
+  4: 'Descripción', 
+  5: 'Nivel 2', 
+  6: 'Puerto Chile', 
+  9: 'Fechas', 
+  11: 'Centro Agua', 
+  14: 'Fechas', 
+  16: 'Puerto Oficina', 
+  19: 'Fechas', 
+  21: 'Almacén Oficina', 
+  24: 'Fechas' })
+
 ws_stock_puerto.merge_cells('F1:H1')
 ws_stock_puerto.merge_cells('I1:J1')
 ws_stock_puerto.merge_cells('K1:M1')
@@ -76,14 +89,15 @@ ws_stock_puerto.merge_cells('P1:R1')
 ws_stock_puerto.merge_cells('S1:T1')
 ws_stock_puerto.merge_cells('U1:W1')
 ws_stock_puerto.merge_cells('X1:Y1')
+
 ws_stock_puerto.append({ 6: 'Stock liberado', 7: 'Stock no liberado', 8: 'Stock total', 
-                          9: 'Fecha inicio', 10: 'Fecha termino', 
-                          11: 'Stock liberado', 12: 'Stock no liberado', 13: 'Stock total', 
-                          14: 'Fecha inicio', 15: 'Fecha termino', 
-                          16: 'Stock liberado', 17: 'Stock no liberado', 18: 'Stock total',
-                          19: 'Fecha inicio', 20: 'Fecha termino', 
-                          21: 'Stock liberado', 22: 'Stock no liberado', 23: 'Stock total',
-                          24: 'Fecha inicio', 25: 'Fecha termino' })
+  9: 'Fecha inicio', 10: 'Fecha termino', 
+  11: 'Stock liberado', 12: 'Stock no liberado', 13: 'Stock total', 
+  14: 'Fecha inicio', 15: 'Fecha termino', 
+  16: 'Stock liberado', 17: 'Stock no liberado', 18: 'Stock total',
+  19: 'Nº Días de Antigüedad Centro', 20: 'Nº Días de Antigüedad Oficina', 
+  21: 'Stock liberado', 22: 'Stock no liberado', 23: 'Stock total',
+  24: 'Nº Días de Antigüedad Centro', 25: 'Nº Días de Antigüedad Oficina' })
 ws_stock_puerto.merge_cells('A2:E2')
 run_styles(ws_stock_puerto)
 thin = Side(border_style="thin", color=white)
@@ -98,6 +112,39 @@ wb.save(filename)
 for i in range(6, 26):
   ws_stock_puerto.column_dimensions[f'{get_column_letter(i)}'].width = 10
 
+# ----- Días antiguedad Stock
+wb_dias_stock = load_workbook(filename_dias, read_only=True, data_only=True)
+ws_dias_stock = wb_dias_stock.active
+dict_dias_stock = {}
+
+for row in ws_dias_stock.iter_rows(9, ws_dias_stock.max_row, values_only=True):
+  if row[1] is None:
+    break
+  # Stock No liberado
+  sector = row[0]
+  oficina = row[1]
+  material = row[2]
+  descripcion = row[3]
+  puerto_no_lib = row[5]
+  puerto_dias_centro = row[8]
+  puerto_dias_oficina = row[11]
+  almacen_no_lib = row[14]
+  almacen_dias_centro = row[17]
+  almacen_dias_oficina = row[20]
+  llave = oficina.lower() + material
+  
+  dict_dias_stock[llave] = {'sector': sector, 'descripcion': descripcion,
+    'Oficina no liberado': puerto_no_lib,
+    'Oficina dias centro': puerto_dias_centro,
+    'Oficina dias oficina': puerto_dias_oficina,
+    'Almacen no liberado': almacen_no_lib,
+    'Almacen dias centro': almacen_dias_centro,
+    'Almacen dias oficina': almacen_dias_oficina
+  }
+
+wb_dias_stock.close()
+
+# ----- Rellenamso la información
 for row in ws_puerto.iter_rows(8, ws_puerto.max_row, values_only=True):
   oficina = row[0]
   sector = row[1]
@@ -113,15 +160,20 @@ for row in ws_puerto.iter_rows(8, ws_puerto.max_row, values_only=True):
   almacen_no_lib = row[17]
 
   if material is not None:
-    ws_stock_puerto.append({1: sector, 2: oficina, 3: int(material), 4: descripcion, 
-      6: puerto_liberado or 0, 
-      7: puerto_no_liberado or 0, 
-      11: agua_liberado or 0, 
-      12: agua_no_liberado or 0, 
-      16: oficina_lib or 0, 
-      17: oficina_no_lib or 0,
-      21: almacen_lib or 0,
-      22: almacen_no_lib or 0 })
+    llave = oficina.lower() + material
+    if llave in dict_dias_stock:
+      print(llave, sector, '-' ,oficina_no_lib, '-',dict_dias_stock[llave]['Oficina no liberado'])
+      ws_stock_puerto.append({1: sector, 2: oficina, 3: int(material), 4: descripcion, 
+        6: puerto_liberado or 0, 
+        7: puerto_no_liberado or 0, 
+        11: agua_liberado or 0, 
+        12: agua_no_liberado or 0, 
+        16: oficina_lib or 0, 
+        17: oficina_no_lib or 0,
+        18: dict_dias_stock[llave]['Oficina dias centro'],
+        19: dict_dias_stock[llave]['Oficina dias oficina'],
+        21: almacen_lib or 0,
+        22: almacen_no_lib or 0 })
 
 for i in range(3, ws_stock_puerto.max_row + 1):
   ws_stock_puerto[f'H{i}'] = f'=SUM(F{i}:G{i})'
@@ -161,30 +213,31 @@ for i in range(3, ws_stock_puerto.max_row + 1):
 date = datetime.now()
 print(date)
 
-for row in ws.iter_rows(2, ws.max_row, values_only=True):
-  sector = row[0]
-  oficina = row[1]
-  material = row[2]
-  descripcion = row[3]
-  puerto_liberado = row[5]
-  puerto_no_liberado = row[6]
-  inicio_puerto = row[8]
-  termino_puerto = row[9]
+# for row in ws.iter_rows(2, ws.max_row, values_only=True):
+#   sector = row[0]
+#   oficina = row[1]
+#   material = row[2]
+#   descripcion = row[3]
+#   puerto_liberado = row[5]
+#   puerto_no_liberado = row[6]
+#   inicio_puerto = row[8]
+#   termino_puerto = row[9]
 
-  agua_liberado = row[10]
-  agua_no_liberado = row[11]
-  inicio_agua = row[13]
-  termino_agua = row[14]
+#   agua_liberado = row[10]
+#   agua_no_liberado = row[11]
+#   inicio_agua = row[13]
+#   termino_agua = row[14]
 
-  oficina_lib = row[15]
-  oficina_no_lib = row[16]
-  inicio_oficina = row[18]
-  termino_oficina = row[19]
+#   oficina_lib = row[15]
+#   oficina_no_lib = row[16]
+#   inicio_oficina = row[18]
+#   termino_oficina = row[19]
 
-  almacen_lib = row[20]
-  almacen_no_lib = row[17]
+#   almacen_lib = row[20]
+#   almacen_no_lib = row[17]
 
-  print(row)
+#   # print(row)
+
 
 # ----- Guardar la información
 run_number_format(ws)
