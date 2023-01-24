@@ -2,11 +2,18 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles.numbers import FORMAT_PERCENTAGE, BUILTIN_FORMATS
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+from Stock.stock import stock
+from ETA.ETA import create_ETA
+from MessageBox.MessageBox import messageBox
 from styles import run_styles, run_number_format
 from constants import *
 
 import time
-from datetime import datetime
+import calendar
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
+import holidays
 start_time = time.time()
 
 # ----- 1. Abrimos el excel de los parametros
@@ -14,28 +21,111 @@ wb_parametros = load_workbook(filename_parametros, data_only = True, read_only =
 ws_parametros_time = wb_parametros['Lead time']
 ws_parametros_venta = wb_parametros['Venta']
 
-tipo_venta = ws_parametros_venta['B1'].value
-# print(tipo_venta)
+# DIAS PARA VENDER
+ws_parametros_dias_venta = wb_parametros['Cierre venta']
+dict_cierre_venta = {}
+ws_dias_max = ws_parametros_dias_venta.max_row
 
-venta_iteracion = 'directa'
-dict_parametros_venta = {'directa': {}, 'local': {}}
-for row in ws_parametros_time.iter_rows(2, ws_parametros_time.max_row, values_only = True):
+for row in ws_parametros_dias_venta.iter_rows(2, ws_dias_max, values_only = True):
   if row[1] is None:
     break
+  oficina = row[1]
+  dias_cierre = row[2]
+  dict_cierre_venta[oficina.lower()] = dias_cierre
 
+# FECHAS
+selected_tipo_venta = ws_parametros_venta['B1'].value
+selected_month = ws_parametros_venta['B2'].value
+number_selected_month = month_number[selected_month.lower()]
+today = datetime.now()
+date_selected_month = date(today.year, number_selected_month, 1)
+last_day_month = calendar.monthrange(today.year, today.month)[1]
+
+# HOLIDAYS
+dict_holidays = {
+  'agro america': holidays.US(years=today.year),     # USA
+  'agro europa': holidays.IT(years=today.year),      # ITALIA
+  'agro mexico': holidays.MX(years=today.year),      # Mexico
+  'agrosuper shanghai': holidays.CN(years=today.year),    # China
+  'andes asia': holidays.KR(years=today.year)         # Corea del sur
+}
+
+# TIPO DE VENTA y LEAD TIME
+venta_iteracion = 'directa'
+escenario_iteracion = 'optimista'
+dict_lead_time = {
+  'optimista': {'directa': {}, 'local': {}},
+  'pesimista': {'directa': {}, 'local': {}},
+}
+
+for row in ws_parametros_time.iter_rows(2, ws_parametros_time.max_row, values_only = True):
   if 'Venta Local' == row[0]:
     venta_iteracion = 'local'
+  
+  if 'PESIMISTA' == row[0]:
+    escenario_iteracion = 'pesimista'
+    venta_iteracion = 'directa'
+
   oficina = row[1]
-  tiempo_transito = row[2]
-  dict_parametros_venta[venta_iteracion][oficina] = tiempo_transito
+  planta = row[2]
+  puerto = row[3]
+  agua = row[4]
+  destino = row[5]
+  almacen = row[6]
+
+  if oficina is not None:
+    if oficina.lower() != 'oficina':
+      if 'local' in venta_iteracion.lower():
+        dict_lead_time[escenario_iteracion][venta_iteracion][oficina.lower()] = { 'Planta': planta, 'Puerto': puerto, 'Agua': agua, 'Destino': destino, 'Almacen': almacen }
+      else:
+        dict_lead_time[escenario_iteracion][venta_iteracion][oficina.lower()] = { 'Planta': planta, 'Puerto': puerto }
+
 wb_parametros.close()
+
+# ----. Nombre fechas
+month_1 = date_selected_month
+month_2 = date_selected_month + relativedelta(months=1)
+month_3 = date_selected_month + relativedelta(months=2)
+
+name_month_1 = month_translate_EN_CL[month_1.strftime('%B').lower()]
+name_month_2 = month_translate_EN_CL[month_2.strftime('%B').lower()]
+name_month_3 = month_translate_EN_CL[month_3.strftime('%B').lower()]
 
 # ----- 2. Creamos el excel de resultados
 wb = Workbook()
-ws = wb.create_sheet('Rango proyección')
-ws.append(['Sector', 'Oficina', 'Material', 'Descripción', 'Venta Actual', 'Plan', 'Stock planta', 'Puerto Chile', 'Centro Agua', 'Puerto Oficina', 'Almacen oficina','Pesimista Proy.', 'Optimista. Proy.'])
-run_styles(ws)
+ws = wb.create_sheet()
+ws.title = 'Rango proyección'
 
+ws.append({
+  1: 'Sector', 
+  2: 'Llave',
+  3: 'Oficina', 
+  4: 'Material', 
+  5: 'Descripción',
+  6: 'Venta Actual',
+  7: 'Plan',
+  8: f'Proyección {name_month_1}',
+  14: f'Proyección {name_month_2}',
+  19: f'Proyección {name_month_3}'
+})
+
+ws.append({
+  8: 'ETA Pesimista',
+  9: 'ETA Optimista',
+  10: 'Puerto Oficina',
+  11: 'Almacen oficina',
+  12: 'Pesimista Proy.',
+  13: 'Optimista. Proy.',
+  14: 'ETA Pesimista',
+  15: 'ETA Optimista',
+  16: 'Pesimista Proy.',
+  17: 'Optimista. Proy.',
+  18: 'Asignación de venta',
+  19: 'ETA Pesimista',
+  20: 'ETA Optimista',
+  21: 'Pesimista Proy.',
+  22: 'Optimista. Proy.'
+})
 del wb['Sheet']
 
 # ----- 3. Leemos Venta actual
@@ -50,197 +140,160 @@ for row in ws_venta.iter_rows(7, ws_venta.max_row, values_only=True):
   plan_total = row[6]
   venta_total = row[7]
   if sector is not None and descripcion is not None:
-    ws.append({ 1: sector, 
-                2: oficina, 
-                3: int(material), 
-                4: descripcion, 
-                5: venta_total or 0, 
-                6: plan_total or 0})
+    if oficina.lower() in dict_lead_time['optimista'][selected_tipo_venta.lower()].keys():
+      ws.append({ 1: sector,
+                  2: f'{oficina.lower()}{material}',
+                  3: oficina, 
+                  4: int(material), 
+                  5: descripcion, 
+                  6: venta_total or 0, 
+                  7: plan_total or 0,
+                  8: 0,
+                  10: 0,
+                  11: 0,
+                  14: 0,
+                  18: 0,
+                  19: 0
+                })
+wb_venta.close()
 
-# ----- 4. Puerto Chile, Centro Agua, Puerto Oficina, Almacén Oficina
-wb_puerto = load_workbook(filename_puerto, data_only=True, read_only=True)
-ws_puerto = wb_puerto.active
-dict_puerto_chile = {}
-dict_centro_agua = {}
-dict_puerto_oficina = {}
-dict_almacen = {}
-dict_puerto = {}
-
-ws_stock_puerto = wb.create_sheet('Stock - Puerto')
-ws_stock_puerto.append({ 1: 'Sector', 
-  2: 'Oficina', 
-  3: 'Material', 
-  4: 'Descripción', 
-  5: 'Nivel 2', 
-  6: 'Puerto Chile', 
-  9: 'Fechas', 
-  11: 'Centro Agua', 
-  14: 'Fechas', 
-  16: 'Puerto Oficina', 
-  19: 'Fechas', 
-  21: 'Almacén Oficina', 
-  24: 'Fechas' })
-
-ws_stock_puerto.merge_cells('F1:H1')
-ws_stock_puerto.merge_cells('I1:J1')
-ws_stock_puerto.merge_cells('K1:M1')
-ws_stock_puerto.merge_cells('N1:O1')
-ws_stock_puerto.merge_cells('P1:R1')
-ws_stock_puerto.merge_cells('S1:T1')
-ws_stock_puerto.merge_cells('U1:W1')
-ws_stock_puerto.merge_cells('X1:Y1')
-
-ws_stock_puerto.append({ 6: 'Stock liberado', 7: 'Stock no liberado', 8: 'Stock total', 
-  9: 'Fecha inicio', 10: 'Fecha termino', 
-  11: 'Stock liberado', 12: 'Stock no liberado', 13: 'Stock total', 
-  14: 'Fecha inicio', 15: 'Fecha termino', 
-  16: 'Stock liberado', 17: 'Stock no liberado', 18: 'Stock total',
-  19: 'Nº Días de Antigüedad Centro', 20: 'Nº Días de Antigüedad Oficina', 
-  21: 'Stock liberado', 22: 'Stock no liberado', 23: 'Stock total',
-  24: 'Nº Días de Antigüedad Centro', 25: 'Nº Días de Antigüedad Oficina' })
-ws_stock_puerto.merge_cells('A2:E2')
-run_styles(ws_stock_puerto)
-thin = Side(border_style="thin", color=white)
-
-for i in range(1, 26):
-  ws_stock_puerto[f'{get_column_letter(i)}2'].font = Font(bold=True, color=white)
-  ws_stock_puerto[f'{get_column_letter(i)}2'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-  ws_stock_puerto[f'{get_column_letter(i)}2'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
-  ws_stock_puerto[f'{get_column_letter(i)}2'].fill = PatternFill("solid", fgColor=lightBlue)
+# ----- 4. Creamos la sheet Stock - Oficina
+ws_stock_oficina = wb.create_sheet('Stock - Oficina')
+stock(ws_stock_oficina, dict_lead_time, selected_tipo_venta, selected_month)
 wb.save(filename)
 
-for i in range(6, 26):
-  ws_stock_puerto.column_dimensions[f'{get_column_letter(i)}'].width = 10
+# ----- 5. Creamos la sheet Stock - Oficina
+print("--- %s 4.ETA inicio ---" % (time.time() - start_time))
+ws_stock_ETA = wb.create_sheet('Stock - ETA')
+create_ETA(ws_stock_ETA, dict_lead_time, selected_tipo_venta, date_selected_month, dict_cierre_venta)
+wb.save(filename)
+ws_ETA_max_row = ws_stock_ETA.max_row
+print("--- %s 5. ETA final---" % (time.time() - start_time))
 
-# ----- Días antiguedad Stock
-wb_dias_stock = load_workbook(filename_dias, read_only=True, data_only=True)
-ws_dias_stock = wb_dias_stock.active
-dict_dias_stock = {}
+# ----- 6. Agregamos Stock Puerto Oficina,	Almacen oficina
+dict_stock = {}
+dict_stock_all = {}
 
-for row in ws_dias_stock.iter_rows(9, ws_dias_stock.max_row, values_only=True):
-  if row[1] is None:
-    break
-  # Stock No liberado
+for row in ws_stock_oficina.iter_rows(4, ws_stock_oficina.max_row, values_only=True):
   sector = row[0]
   oficina = row[1]
   material = row[2]
   descripcion = row[3]
-  puerto_no_lib = row[5]
-  puerto_dias_centro = row[8]
-  puerto_dias_oficina = row[11]
-  almacen_no_lib = row[14]
-  almacen_dias_centro = row[17]
-  almacen_dias_oficina = row[20]
-  llave = oficina.lower() + material
+  llave = f'{oficina.lower()}{material}'
+  puerto_oficina = row[8] + row[12]
+  almacen = row[16] + row[20]
+  dict_stock[llave] = { 'Puerto oficina': puerto_oficina, 'Almacen': almacen }
+  dict_stock_all[llave] = { 'sector': sector, 'oficina': oficina, 'material': material, 'descripcion': descripcion, 'Puerto oficina': puerto_oficina, 'Almacen': almacen }
+
+print("--- %s 6. ---" % (time.time() - start_time))
+dict_leftover_country = {}
+
+for i, row in enumerate(ws.iter_rows(3, ws.max_row, values_only = True), 3):
+  llave = row[1]
+  oficina = row[2]
+  lead_time_opt = dict_lead_time['optimista'][selected_tipo_venta.lower()][oficina.lower()]
+  holidays_country = dict_holidays[oficina.lower()]
+
+  if llave in dict_stock:
+    ws[f'J{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
+    ws[f'K{i}'].value = dict_stock[llave]['Almacen'] or 0
+    dict_stock_all.pop(llave, None)
+
+  # -- Feriados
+  leftover_days = 0
+  if oficina in dict_leftover_country:
+    leftover_days = dict_leftover_country[oficina.lower()]
+  else:
+    for day in range(today.day + 1, last_day_month + 1):
+      date_day = date(today.year, number_selected_month, day)
+      if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
+        leftover_days += 1
+    dict_leftover_country[oficina.lower()] = leftover_days
   
-  dict_dias_stock[llave] = {'sector': sector, 'descripcion': descripcion,
-    'Oficina no liberado': puerto_no_lib,
-    'Oficina dias centro': puerto_dias_centro,
-    'Oficina dias oficina': puerto_dias_oficina,
-    'Almacen no liberado': almacen_no_lib,
-    'Almacen dias centro': almacen_dias_centro,
-    'Almacen dias oficina': almacen_dias_oficina
-  }
+  if 'local' in selected_tipo_venta.lower():
+    # -- MES N
+    ws[f'L{i}'].value = f'=F{i} + K{i} + H{i}'                    # PESIMISTA --> Venta Actual + Almacen oficina
+    ws[f'M{i}'].value = f'=F{i} + K{i} + I{i}'                    # OPTIMISTA --> Venta Actual + Almacen oficina
 
-wb_dias_stock.close()
+    if leftover_days >= round(lead_time_opt['Destino'], 2):
+      ws[f'M{i}'].value = f'=F{i} + K{i} + J{i} + I{i}'           # OPTIMISTA --> + Puerto Oficina
+      ws[f'M{i}'].fill = PatternFill("solid", fgColor=yellow)
+    
+    # -- MES N + 1
+    # + no alcance a vender del MES N
+    # + producción de este mes
+    # + ETAS
+    ws[f'P{i}'].value = f'=N{i}'
+    ws[f'Q{i}'].value = f'=O{i}'
 
-# ----- Rellenamso la información
-for row in ws_puerto.iter_rows(8, ws_puerto.max_row, values_only=True):
-  oficina = row[0]
-  sector = row[1]
-  material = row[2]
-  descripcion = row[3]
-  puerto_liberado = row[7]
-  puerto_no_liberado = row[8]
-  agua_liberado = row[10]
-  agua_no_liberado = row[11]
-  oficina_lib = row[13]
-  oficina_no_lib = row[14]
-  almacen_lib = row[16]
-  almacen_no_lib = row[17]
+    # -- MES N + 2
+    # + no alcance a vender del MES N + 1
+    # + Asignación de venta
+    # + ETAS
+    ws[f'U{i}'].value = f'= 0.7 * R{i} + S{i}'
+    ws[f'V{i}'].value = f'= 0.7 * R{i} + T{i}'
 
-  if material is not None:
-    llave = oficina.lower() + material
-    if llave in dict_dias_stock:
-      print(llave, sector, '-' ,oficina_no_lib, '-',dict_dias_stock[llave]['Oficina no liberado'])
-      ws_stock_puerto.append({1: sector, 2: oficina, 3: int(material), 4: descripcion, 
-        6: puerto_liberado or 0, 
-        7: puerto_no_liberado or 0, 
-        11: agua_liberado or 0, 
-        12: agua_no_liberado or 0, 
-        16: oficina_lib or 0, 
-        17: oficina_no_lib or 0,
-        18: dict_dias_stock[llave]['Oficina dias centro'],
-        19: dict_dias_stock[llave]['Oficina dias oficina'],
-        21: almacen_lib or 0,
-        22: almacen_no_lib or 0 })
+    # ----- Stock planta	Puerto Chile	Centro Agua
+  ws[f'I{i}'].value = f"=SUMIFS('Stock - ETA'!$G$3:G{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$5)"
+  ws[f'O{i}'].value = f"=SUMIFS('Stock - ETA'!$H$3:H{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$7)"
+  ws[f'T{i}'].value = f"=SUMIFS('Stock - ETA'!$I$3:I{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$8)"
 
-for i in range(3, ws_stock_puerto.max_row + 1):
-  ws_stock_puerto[f'H{i}'] = f'=SUM(F{i}:G{i})'
-  ws_stock_puerto[f'M{i}'] = f'=SUM(K{i}:L{i})'
-  ws_stock_puerto[f'R{i}'] = f'=SUM(P{i}:Q{i})'
-  ws_stock_puerto[f'W{i}'] = f'=SUM(U{i}:V{i})'
+  ws[f'H{i}'].value = f"=SUMIFS('Stock - ETA'!$Q$3:Q{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$5)"
+  ws[f'N{i}'].value = f"=SUMIFS('Stock - ETA'!$R$3:R{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$Q$3:Q{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$7)"
+  ws[f'S{i}'].value = f"=SUMIFS('Stock - ETA'!$S$3:S{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$R$3:R{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$8)"
+wb.save(filename)
 
-  ws_stock_puerto[f'F{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'G{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'H{i}'].number_format = BUILTIN_FORMATS[3]
-
-  ws_stock_puerto[f'I{i}'].number_format = BUILTIN_FORMATS[15]
-  ws_stock_puerto[f'J{i}'].number_format = BUILTIN_FORMATS[15]
+print("--- %s 7. ---" % (time.time() - start_time))
+# ----- Stock sin Venta ni Plan
+j = ws.max_row
+for key, value in dict_stock_all.items():
+  j += 1
+  of = dict_stock_all[key]['oficina']
+  mat = dict_stock_all[key]['material']
+  ws.append({
+    1: dict_stock_all[key]['sector'],
+    2: f'{of}{mat}',
+    3: of,
+    4: mat,
+    5: dict_stock_all[key]['descripcion'],
+    6: 0,
+    7: 0,
+    8: 0,
+    9: f"=SUMIFS('Stock - ETA'!$G$3:G{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$5)",
+    10: dict_stock_all[key]['Puerto oficina'],
+    11: dict_stock_all[key]['Almacen'],
+    12: f'=F{j} + K{j} + H{i}',
+    13: f'=F{j} + K{j} + I{i}',
+    14: 0,
+    15: f"=SUMIFS('Stock - ETA'!$H$3:H{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$7)",
+    16: f'=N{j}',
+    17: f'=O{j}',
+    18: 0,
+    19: 0,
+    20: f"=SUMIFS('Stock - ETA'!$I$3:I{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ws_ETA_max_row}, 'Rango proyección'!$X$8)",
+    21: f'=0.7 * R{j} + S{j}',
+    22: f'=0.7 * R{j} + T{j}',
+  })
   
-  ws_stock_puerto[f'K{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'L{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'M{i}'].number_format = BUILTIN_FORMATS[3]
-
-  ws_stock_puerto[f'N{i}'].number_format = BUILTIN_FORMATS[15]
-  ws_stock_puerto[f'O{i}'].number_format = BUILTIN_FORMATS[15]
-
-  ws_stock_puerto[f'P{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'Q{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'R{i}'].number_format = BUILTIN_FORMATS[3]
-
-  ws_stock_puerto[f'S{i}'].number_format = BUILTIN_FORMATS[15]
-  ws_stock_puerto[f'T{i}'].number_format = BUILTIN_FORMATS[15]
-
-  ws_stock_puerto[f'U{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'V{i}'].number_format = BUILTIN_FORMATS[3]
-  ws_stock_puerto[f'W{i}'].number_format = BUILTIN_FORMATS[3]
-
-  ws_stock_puerto[f'X{i}'].number_format = BUILTIN_FORMATS[15]
-  ws_stock_puerto[f'Y{i}'].number_format = BUILTIN_FORMATS[15]
- 
-# ----- Tiempo de Stock
-date = datetime.now()
-print(date)
-
-# for row in ws.iter_rows(2, ws.max_row, values_only=True):
-#   sector = row[0]
-#   oficina = row[1]
-#   material = row[2]
-#   descripcion = row[3]
-#   puerto_liberado = row[5]
-#   puerto_no_liberado = row[6]
-#   inicio_puerto = row[8]
-#   termino_puerto = row[9]
-
-#   agua_liberado = row[10]
-#   agua_no_liberado = row[11]
-#   inicio_agua = row[13]
-#   termino_agua = row[14]
-
-#   oficina_lib = row[15]
-#   oficina_no_lib = row[16]
-#   inicio_oficina = row[18]
-#   termino_oficina = row[19]
-
-#   almacen_lib = row[20]
-#   almacen_no_lib = row[17]
-
-#   # print(row)
-
+print("--- %s 8. ---" % (time.time() - start_time))
 
 # ----- Guardar la información
+run_styles(ws)
 run_number_format(ws)
+
+ws['X5'].value = "SI"
+ws['X6'].value = f"Mes {month_1.month}"
+ws['X7'].value = f"Mes {month_2.month}"
+ws['X8'].value = f"Mes {month_3.month}"
+
+ws['X3'].fill = PatternFill("solid", fgColor=yellow)
+ws['Y3'].value = 'Se suma los pedidos de puerto oficina'
+
+ws['X4'].fill = PatternFill("solid", fgColor=lightGreen)
+ws['Y4'].value = 'Se suma los pedidos que llegan este mes de agua'
+print("--- %s 11. ---" % (time.time() - start_time))
+
 wb.save(filename)
 wb.close()
 print("--- %s seconds ---" % (time.time() - start_time))
+messageBox(dict_lead_time, selected_tipo_venta)
