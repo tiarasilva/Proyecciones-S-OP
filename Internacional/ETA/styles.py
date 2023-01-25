@@ -31,6 +31,8 @@ def run_styles(ws):
   ws.column_dimensions['X'].width = 12
   ws.column_dimensions['Z'].width = 12
 
+  ws.row_dimensions[1].height = 25
+
   # Merge
   ws.merge_cells('G1:P1')
   ws.merge_cells('Q1:Z1')
@@ -45,6 +47,7 @@ def run_styles(ws):
   ws['Q1'].fill = PatternFill("solid", fgColor=lightBlue)
 
 def run_number_format(ws):
+  print("--- %s ETA 6.2 ---" % (time.time() - start_time))
   thin = Side(border_style="thin", color=white)
   border_white = Border(top=thin, left=thin, right=thin, bottom=thin)
 
@@ -54,6 +57,7 @@ def run_number_format(ws):
 
   fill_light_blue = PatternFill("solid", fgColor=lightlightBlue)
 
+  print("--- %s ETA 6.3 ---" % (time.time() - start_time))
   for i in range(3, ws.max_row + 1):
     ws[f'G{i}'].number_format = BUILTIN_FORMATS[3]
     ws[f'H{i}'].number_format = BUILTIN_FORMATS[3]
@@ -71,10 +75,30 @@ def run_number_format(ws):
     ws[f'U{i}'].number_format = BUILTIN_FORMATS[4]
     ws[f'W{i}'].number_format = BUILTIN_FORMATS[4]
 
-    for j in range(1, 7):
-      ws[f'{get_column_letter(j)}{i}'].font = font_blue
-      ws[f'{get_column_letter(j)}{i}'].fill = fill_light_blue
-      ws[f'{get_column_letter(j)}{i}'].border = border_white
+    # for j in range(1, 7):
+    ws[f'A{i}'].font = font_blue
+    ws[f'A{i}'].fill = fill_light_blue
+    ws[f'A{i}'].border = border_white
+
+    ws[f'B{i}'].font = font_blue
+    ws[f'B{i}'].fill = fill_light_blue
+    ws[f'B{i}'].border = border_white
+
+    ws[f'C{i}'].font = font_blue
+    ws[f'C{i}'].fill = fill_light_blue
+    ws[f'C{i}'].border = border_white
+
+    ws[f'D{i}'].font = font_blue
+    ws[f'D{i}'].fill = fill_light_blue
+    ws[f'D{i}'].border = border_white
+
+    ws[f'E{i}'].font = font_blue
+    ws[f'E{i}'].fill = fill_light_blue
+    ws[f'E{i}'].border = border_white
+
+    ws[f'F{i}'].font = font_blue
+    ws[f'F{i}'].fill = fill_light_blue
+    ws[f'F{i}'].border = border_white
 
     ws[f'G{i}'].border = border_light_blue
     ws[f'K{i}'].border = border_light_blue
@@ -86,3 +110,4 @@ def run_number_format(ws):
     ws[f'P{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'Y{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'Z{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+  print("--- %s ETA 6.4 ---" % (time.time() - start_time))

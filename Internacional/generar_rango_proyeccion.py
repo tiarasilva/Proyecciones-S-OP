@@ -97,6 +97,12 @@ ws = wb.create_sheet()
 ws.title = 'Rango proyección'
 
 ws.append({
+  8: f'Proyección {name_month_1}',
+  14: f'Proyección {name_month_2}',
+  18: f'Proyección {name_month_3}'
+})
+
+ws.append({
   1: 'Sector', 
   2: 'Llave',
   3: 'Oficina', 
@@ -104,12 +110,6 @@ ws.append({
   5: 'Descripción',
   6: 'Venta Actual',
   7: 'Plan',
-  8: f'Proyección {name_month_1}',
-  14: f'Proyección {name_month_2}',
-  19: f'Proyección {name_month_3}'
-})
-
-ws.append({
   8: 'ETA Pesimista',
   9: 'ETA Optimista',
   10: 'Puerto Oficina',
@@ -241,7 +241,6 @@ for i, row in enumerate(ws.iter_rows(3, ws.max_row, values_only = True), 3):
   ws[f'H{i}'].value = f"=SUMIFS('Stock - ETA'!$Q$3:Q{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$5)"
   ws[f'N{i}'].value = f"=SUMIFS('Stock - ETA'!$R$3:R{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$Q$3:Q{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$7)"
   ws[f'S{i}'].value = f"=SUMIFS('Stock - ETA'!$S$3:S{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$R$3:R{ws_ETA_max_row}, 'Stock - ETA'!$E$3:E{ws_ETA_max_row}, 'Rango proyección'!B{i}, 'Stock - ETA'!$Z$3:Z{ws_ETA_max_row}, 'Rango proyección'!$X$8)"
-wb.save(filename)
 
 print("--- %s 7. ---" % (time.time() - start_time))
 # ----- Stock sin Venta ni Plan

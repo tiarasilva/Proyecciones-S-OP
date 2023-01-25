@@ -4,16 +4,29 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.styles.numbers import FORMAT_PERCENTAGE, BUILTIN_FORMATS
 from constants import *
 
+import time
+start_time = time.time()
+
 def run_styles(ws):
   thin = Side(border_style="thin", color=white)
   line_blue = Side(border_style="thin", color=blue)
 
-  for i in range(1, ws.max_column + 1):
-    ws[f'{get_column_letter(i)}1'].font = Font(bold=True, color=white)
-    ws[f'{get_column_letter(i)}1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'{get_column_letter(i)}1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
-    ws[f'{get_column_letter(i)}1'].fill = PatternFill("solid", fgColor=lightBlue)
+  ws['H1'].font = Font(bold=True, color=white)
+  ws['H1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+  ws['H1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws['H1'].fill = PatternFill("solid", fgColor=lightBlue)
 
+  ws['N1'].font = Font(bold=True, color=white)
+  ws['N1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+  ws['N1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws['N1'].fill = PatternFill("solid", fgColor=lightBlue)
+
+  ws['R1'].font = Font(bold=True, color=white)
+  ws['R1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+  ws['R1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws['R1'].fill = PatternFill("solid", fgColor=lightBlue)
+
+  for i in range(1, ws.max_column + 1):
     ws[f'{get_column_letter(i)}2'].font = Font(bold=True, color=white)
     ws[f'{get_column_letter(i)}2'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'{get_column_letter(i)}2'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
@@ -32,13 +45,8 @@ def run_styles(ws):
   ws.merge_cells('N1:Q1')
   ws.merge_cells('R1:V1')
 
-  ws.merge_cells('A1:A2')
-  ws.merge_cells('B1:B2')
-  ws.merge_cells('C1:C2')
-  ws.merge_cells('D1:D2')
-  ws.merge_cells('E1:E2')
-  ws.merge_cells('F1:F2')
-  ws.merge_cells('G1:G2')
+  # Tamaño
+  ws.row_dimensions[1].height =  25
 
   for i in range(3, ws.max_row + 1):
     ws[f'A{i}'].font = Font(bold=False, color=blue)
@@ -73,6 +81,12 @@ def run_styles(ws):
     ws[f'V{i}'].font = Font(bold=True)
 
 def run_number_format(ws):
+  print("--- %s NORMAL 6.1 ---" % (time.time() - start_time))
   for i in range(2, ws.max_row + 1):
     for j in range(6, ws.max_column + 1):
       ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
+  print("--- %s NORMAL 6.2 ---" % (time.time() - start_time))
+    
