@@ -11,7 +11,6 @@ start_time = time.time()
 
 def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dict_cierre_venta):
   # HOLIDAYS
-  print("--- %s ETA 1 ---" % (time.time() - start_time))
   today = datetime.now()
   last_year = today.year - 1
   this_year = today.year
@@ -40,7 +39,6 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
     }
   }
 
-  print("--- %s ETA 2 ---" % (time.time() - start_time))
   # DATA
   ws.append({
     # 6: f'=SUBTOTALES(9;Tabla14[Mes {selected_month}])'
@@ -91,6 +89,7 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
 
   # ----- Filtrar información
   wb = load_workbook(filename_ETA, read_only=True, data_only=True)
+  print("--- %s ETA 4.1 ---" % (time.time() - start_time))
   ws_ETA = wb['ETA']
   ws_ETA_max_row = ws_ETA.max_row
   dict_status = {
@@ -215,5 +214,6 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
 # ----- Corremos estilos y cerramos
   wb.close()
   run_styles(ws)
+  print("--- %s ETA 6.1 ---" % (time.time() - start_time))
   run_number_format(ws)
   print("--- %s ETA 6 ---" % (time.time() - start_time))
