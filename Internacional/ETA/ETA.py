@@ -89,7 +89,7 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
 
   # ----- Filtrar información
   wb = load_workbook(filename_ETA, read_only=True, data_only=True)
-  print("--- %s ETA 4.1 ---" % (time.time() - start_time))
+  print("--- %s ETA 4 ---" % (time.time() - start_time))
   ws_ETA = wb['ETA']
   ws_ETA_max_row = ws_ETA.max_row
   dict_status = {
@@ -102,7 +102,7 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
   dict_leftover_date_pes = {}
 
   i = 3
-  print("--- %s ETA 4 ---" % (time.time() - start_time))
+  print("--- %s ETA 4.1 ---" % (time.time() - start_time))
   for row in ws_ETA.iter_rows(4, ws_ETA_max_row, values_only=True):
     pedido = row[0]
     eta = row[10]
@@ -126,7 +126,7 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
       LT_destino = lead_time_opt['Almacen']
       tiempo_final = eta + timedelta(LT_agua) + timedelta(LT_destino)
 
-      if tiempo_final.month == date_selected_month.month:
+      if tiempo_final.month == month_1.month:
         ws[f'G{i}'].value = kilos
       
       elif tiempo_final.month == month_2.month:
@@ -150,13 +150,13 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
       LT_destino = lead_time_pes['Almacen']
       tiempo_final_pes = eta + timedelta(LT_agua) + timedelta(LT_destino)
 
-      if tiempo_final_pes.month == date_selected_month.month:
+      if tiempo_final_pes.month == month_1.month:
         ws[f'Q{i}'].value = kilos
       
-      elif tiempo_final.month == month_2.month:
+      elif tiempo_final_pes.month == month_2.month:
         ws[f'R{i}'].value = kilos
       
-      elif tiempo_final.month == month_3.month:
+      elif tiempo_final_pes.month == month_3.month:
         ws[f'S{i}'].value = kilos
       
       else:
