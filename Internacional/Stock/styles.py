@@ -5,17 +5,23 @@ from constants import *
 
 def run_styles(ws):
   thin = Side(border_style="thin", color=white)
+  ws['F1'].font = Font(bold=True, color=white)
+  ws['F1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+  ws['F1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws['F1'].fill = PatternFill("solid", fgColor=lightBlue)
+
+  ws['N1'].font = Font(bold=True, color=white)
+  ws['N1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+  ws['N1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws['N1'].fill = PatternFill("solid", fgColor=lightBlue)
+
+  for letter in ['F', 'J', 'N', 'R']:
+    ws[f'{letter}2'].font = Font(bold=True, color=white)
+    ws[f'{letter}2'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    ws[f'{letter}2'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+    ws[f'{letter}2'].fill = PatternFill("solid", fgColor=lightBlue)
+
   for i in range(1, ws.max_column + 1):
-    ws[f'{get_column_letter(i)}1'].font = Font(bold=True, color=white)
-    ws[f'{get_column_letter(i)}1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'{get_column_letter(i)}1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
-    ws[f'{get_column_letter(i)}1'].fill = PatternFill("solid", fgColor=lightBlue)
-
-    ws[f'{get_column_letter(i)}2'].font = Font(bold=True, color=white)
-    ws[f'{get_column_letter(i)}2'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'{get_column_letter(i)}2'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
-    ws[f'{get_column_letter(i)}2'].fill = PatternFill("solid", fgColor=lightBlue)
-
     ws[f'{get_column_letter(i)}3'].font = Font(bold=True, color=white)
     ws[f'{get_column_letter(i)}3'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'{get_column_letter(i)}3'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
@@ -33,17 +39,15 @@ def run_styles(ws):
   ws.merge_cells('N2:Q2')
   ws.merge_cells('R2:U2')
 
-  # ws.merge_cells('A1:A3')
-  # ws.merge_cells('B1:B3')
-  # ws.merge_cells('C1:C3')
-  # ws.merge_cells('D1:D3')
-  # ws.merge_cells('E1:E3')
-
   # Tamaños
   ws.column_dimensions['B'].width = 16
   ws.column_dimensions['C'].width = 10
   ws.column_dimensions['D'].width = 33
   ws.column_dimensions['E'].width = 10
+
+  # Tamaño
+  ws.row_dimensions[1].height =  25
+  ws.row_dimensions[2].height =  25
 
 
 def run_number_format(ws):

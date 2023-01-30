@@ -11,11 +11,7 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
   selected_month = month_translate_CL_EN[selected_month.lower()]
   dict_message = {'Puerto Oficina': {}, 'Almacen': {}}
 
-  ws.append({ 1: 'Sector', 
-    2: 'Oficina', 
-    3: 'Material', 
-    4: 'Descripción', 
-    5: 'Nivel 2', 
+  ws.append({
     6: 'Puerto Oficina', 
     14: 'Almacén Oficina'
   })
@@ -26,6 +22,11 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
   })
   
   ws.append({
+    1: 'Sector', 
+    2: 'Oficina', 
+    3: 'Material', 
+    4: 'Descripción', 
+    5: 'Nivel 2', 
     6: 'Total KG', 7: 'Nº Días de Antigüedad Centro', 8: 'Nº Días de Antigüedad Oficina', 9: 'Status considerado',
     10: 'Total KG', 11: 'Nº Días de Antigüedad Centro', 12: 'Nº Días de Antigüedad Oficina', 13: 'Status considerado',
     14: 'Total KG', 15: 'Nº Días de Antigüedad Centro', 16: 'Nº Días de Antigüedad Oficina', 17: 'Status considerado',
