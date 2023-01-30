@@ -16,10 +16,13 @@ from dateutil.relativedelta import relativedelta
 import holidays
 start_time = time.time()
 
+# from TD.TD import main
+
 # ----- 1. Abrimos el excel de los parametros
 wb_parametros = load_workbook(filename_parametros, data_only = True, read_only = True)
 ws_parametros_time = wb_parametros['Lead time']
 ws_parametros_venta = wb_parametros['Venta']
+ws_porcentaje = wb_parametros['Asignación productivo']
 
 # DIAS PARA VENDER
 ws_parametros_dias_venta = wb_parametros['Cierre venta']
@@ -80,6 +83,14 @@ for row in ws_parametros_time.iter_rows(2, ws_parametros_time.max_row, values_on
       else:
         dict_lead_time[escenario_iteracion][venta_iteracion][oficina.lower()] = { 'Planta': planta, 'Puerto': puerto }
 
+# PORCENTAJE DE PRODUCCIÓN
+dict_porcentaje_produccion = {}
+
+for row in ws_porcentaje.iter_rows(2, ws_porcentaje.max_row, values_only=True):
+  oficina = row[1].lower()
+  produccion = row[2]
+  dict_porcentaje_produccion[oficina] = produccion
+
 wb_parametros.close()
 
 # ----. Nombre fechas
@@ -94,7 +105,7 @@ name_month_3 = month_translate_EN_CL[month_3.strftime('%B').lower()]
 # ----- 2. Creamos el excel de resultados
 wb = Workbook()
 ws = wb.create_sheet()
-ws.title = filename_material
+ws.title = filename
 
 ws.append({
   8: f'Proyección {name_month_1} {month_1.year}',
@@ -160,13 +171,13 @@ wb_venta.close()
 # ----- 4. Creamos la sheet Stock - Oficina
 ws_stock_oficina = wb.create_sheet('Stock - Oficina')
 stock(ws_stock_oficina, dict_lead_time, selected_tipo_venta, selected_month)
-wb.save(filename_material)
+wb.save(filename)
 
 # ----- 5. Creamos la sheet Stock - Oficina
 print("--- %s 4.ETA inicio ---" % (time.time() - start_time))
 ws_stock_ETA = wb.create_sheet('Stock - ETA')
 create_ETA(ws_stock_ETA, dict_lead_time, selected_tipo_venta, date_selected_month, dict_cierre_venta)
-wb.save(filename_material)
+wb.save(filename)
 ETA_maxRow = ws_stock_ETA.max_row
 print("--- %s 5. ETA final---" % (time.time() - start_time))
 
@@ -194,7 +205,7 @@ ws_asignaciones_max_row = ws_asignaciones.max_row
 dict_asignaciones = {}
 
 for row in ws_asignaciones.iter_rows(7, ws_asignaciones_max_row - 1, values_only=True):
-  month_year = row[0]
+  month_year = str(row[0])
   sector = row[1]
   office = row[2]
   material = row[3]
@@ -202,7 +213,11 @@ for row in ws_asignaciones.iter_rows(7, ws_asignaciones_max_row - 1, values_only
   RV_final = row[6]
 
   key = f'{office.lower()}{material}'
-  dict_asignaciones[month_year] = { key: { 'sector': sector, 'oficina': oficina, 'material': material,'descripcion': description, 'RV final': RV_final }}
+  if month_year in dict_asignaciones:
+    if key not in dict_asignaciones[month_year]:
+      dict_asignaciones[month_year][key] = { 'sector': sector, 'oficina': oficina, 'material': material,'descripcion': description, 'RV final': RV_final }
+  else:
+    dict_asignaciones[month_year] = { key: { 'sector': sector, 'oficina': oficina, 'material': material,'descripcion': description, 'RV final': RV_final }}
 wb_asignaciones.close()
 
 # -----
@@ -257,17 +272,18 @@ for i, row in enumerate(ws.iter_rows(3, ws.max_row, values_only = True), 3):
     # + no alcance a vender del MES N + 1
     # + 0.7 * Asignación de venta
     # + ETAS
-    ws[f'U{i}'].value = f'= 0.7 * R{i} + S{i}'
-    ws[f'V{i}'].value = f'= 0.7 * R{i} + T{i}'
+    porcentaje = dict_porcentaje_produccion[oficina.lower()]
+    ws[f'U{i}'].value = f'= {porcentaje} * R{i} + S{i}'
+    ws[f'V{i}'].value = f'= {porcentaje} * R{i} + T{i}'
 
     # ----- Stock planta	Puerto Chile	Centro Agua
-  ws[f'I{i}'].value = f"=SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_material}'!$X$5)"
-  ws[f'O{i}'].value = f"=SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_material}'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_material}'!$X$7)"
-  ws[f'T{i}'].value = f"=SUMIFS('Stock - ETA'!$I$3:I{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_material}'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_material}'!$X$8)"
+  ws[f'I{i}'].value = f"=SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$5)"
+  ws[f'O{i}'].value = f"=SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$7)"
+  ws[f'T{i}'].value = f"=SUMIFS('Stock - ETA'!$I$3:I{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$8)"
 
-  ws[f'H{i}'].value = f"=SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_material}'!$X$5)"
-  ws[f'N{i}'].value = f"=SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_material}'!$X$5) + SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_material}'!$X$7)"
-  ws[f'S{i}'].value = f"=SUMIFS('Stock - ETA'!$S$3:S{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_material}'!$X$5) + SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_material}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_material}'!$X$8)"
+  ws[f'H{i}'].value = f"=SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$5)"
+  ws[f'N{i}'].value = f"=SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$7)"
+  ws[f'S{i}'].value = f"=SUMIFS('Stock - ETA'!$S$3:S{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$8)"
 
 print("--- %s 7. ---" % (time.time() - start_time))
 # ----- Stock sin Venta ni Plan
@@ -276,6 +292,8 @@ for key, value in dict_stock_all.items():
   j += 1
   of = dict_stock_all[key]['oficina']
   mat = dict_stock_all[key]['material']
+  porcentaje = dict_porcentaje_produccion[of.lower()]
+
   ws.append({
     1: dict_stock_all[key]['sector'],
     2: f'{of}{mat}',
@@ -285,20 +303,20 @@ for key, value in dict_stock_all.items():
     6: 0,
     7: 0,
     8: 0,
-    9: f"=SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, 'Rango proyección'!$X$5)",
+    9: f"=SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, '{filename}'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, '{filename}'!$X$5)",
     10: dict_stock_all[key]['Puerto oficina'],
     11: dict_stock_all[key]['Almacen'],
     12: f'=F{j} + K{j} + H{i}',
     13: f'=F{j} + K{j} + I{i}',
     14: 0,
-    15: f"=SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, 'Rango proyección'!$X$7)",
+    15: f"=SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, '{filename}'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, '{filename}'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, '{filename}'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, '{filename}'!$X$7)",
     16: f'=N{j}',
     17: f'=O{j}',
     18: 0,
     19: 0,
-    20: f"=SUMIFS('Stock - ETA'!$I$3:I{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, 'Rango proyección'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, 'Rango proyección'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, 'Rango proyección'!$X$8)",
-    21: f'=0.7 * R{j} + S{j}',
-    22: f'=0.7 * R{j} + T{j}',
+    20: f"=SUMIFS('Stock - ETA'!$I$3:I{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, '{filename}'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, '{filename}'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow}, 'Stock - ETA'!$E$3:E{ETA_maxRow}, '{filename}'!B{i}, 'Stock - ETA'!$P$3:P{ETA_maxRow}, '{filename}'!$X$8)",
+    21: f'={porcentaje} * R{j} + S{j}',
+    22: f'={porcentaje} * R{j} + T{j}',
   })
   
 print("--- %s 8. ---" % (time.time() - start_time))
@@ -319,7 +337,10 @@ ws['X4'].fill = PatternFill("solid", fgColor=lightGreen)
 ws['Y4'].value = 'Se suma los pedidos que llegan este mes de agua'
 print("--- %s 11. ---" % (time.time() - start_time))
 
-wb.save(filename_material)
+# ----- Sheet TD
+# main()
+
+wb.save(filename)
 wb.close()
 print("--- %s seconds ---" % (time.time() - start_time))
 messageBox(dict_lead_time, selected_tipo_venta)
