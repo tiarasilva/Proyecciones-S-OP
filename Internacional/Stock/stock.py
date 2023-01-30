@@ -35,11 +35,11 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
 
   # ----- Días antiguedad Stock
   wb_dias_stock = load_workbook(filename_dias, read_only=True, data_only=True)
-  ws_dias_stock = wb_dias_stock.active
+  ws_dias_stock = wb_dias_stock['Stock']
   dict_dias_stock = {}
   obj = calendar.Calendar()
 
-  for i, row in enumerate(ws_dias_stock.iter_rows(9, ws_dias_stock.max_row, values_only=True), 4):
+  for i, row in enumerate(ws_dias_stock.iter_rows(5, ws_dias_stock.max_row, values_only=True), 5):
     if row[1] is None:
       break
     # Stock No liberado
