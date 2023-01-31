@@ -1,9 +1,7 @@
 # Nombre de los archivos
 filename = 'Rango proyecciones.xlsx'
-filename_material = 'Rango proy - material.xlsx'
 filename_parametros = 'Inputs/parametros.xlsx'
 filename_venta = 'Inputs/Venta - Plan.xlsx'
-filename_puerto = 'Inputs/Stock puerto.xlsx'
 filename_dias = 'Inputs/stock.xlsx'
 filename_ETA = 'Inputs/Proyecciones OOII VL S&OP.xlsx'
 filename_asignaciones = 'Inputs/Asignaciones.xlsx'
