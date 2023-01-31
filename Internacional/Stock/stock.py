@@ -39,27 +39,51 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
   dict_dias_stock = {}
   obj = calendar.Calendar()
 
-  for i, row in enumerate(ws_dias_stock.iter_rows(5, ws_dias_stock.max_row, values_only=True), 5):
-    if row[1] is None:
+  sector = ''
+  oficina = ''
+  for i, row in enumerate(ws_dias_stock.iter_rows(5, ws_dias_stock.max_row - 1, values_only=True), 4):
+    if row[2] is None:
       break
-    # Stock No liberado
-    sector = row[0]
-    oficina = row[1]
+    
+    if row[0] is not None:
+      sector = row[0]
+    
+    if row[1] is not None:
+      oficina = row[1]
+    
     material = row[2]
     descripcion = row[3]
-    stock_oficina_lib = row[4] or 0
-    stock_oficina_no_lib = row[5] or 0
-    dias_oficina_centro_lib = row[7] or 0
-    dias_oficina_centro_no_lib = row[8] or 0
-    oficina_dias_lib = row[10] or 0
-    oficina_dias_no_lib = row[11] or 0
-    stock_almacen_lib = row[13] or 0
-    stock_almacen_no_lib = row[14] or 0
-    dias_almacen_centro_lib = row[16] or 0
-    dias_almacen_centro_no_lib = row[17] or 0
-    dias_almacen_lib = row[19] or 0
-    dias_almacen_oficina_no_lib = row[20] or 0
-    llave = oficina.lower() + material
+
+    stock_almacen_lib = row[4] or 0
+    dias_almacen_centro_lib = row[5] or 0
+    dias_almacen_lib = row[6] or 0
+
+    stock_almacen_no_lib = row[7] or 0
+    dias_almacen_centro_no_lib = row[8] or 0
+    dias_almacen_no_lib = row[8] or 0
+
+    stock_oficina_lib = row[13] or 0
+    dias_oficina_centro_lib = row[14] or 0
+    dias_oficina_lib = row[15] or 0
+
+    stock_oficina_no_lib = row[16] or 0
+    dias_oficina_centro_no_lib = row[17] or 0
+    dias_oficina_no_lib = row[11] or 0
+
+
+    # stock_oficina_lib = row[4] or 0
+    # stock_oficina_no_lib = row[5] or 0
+    # dias_oficina_centro_lib = row[7] or 0
+    # dias_oficina_centro_no_lib = row[8] or 0
+    # oficina_dias_lib = row[10] or 0
+    # oficina_dias_no_lib = row[11] or 0
+    # stock_almacen_lib = row[13] or 0
+    # stock_almacen_no_lib = row[14] or 0
+    # dias_almacen_centro_lib = row[16] or 0
+    # dias_almacen_centro_no_lib = row[17] or 0
+    # dias_almacen_lib = row[19] or 0
+    # dias_almacen_oficina_no_lib = row[20] or 0
+    llave = f'{oficina.lower()}{material}'
 
     ws.append({
       1: sector,
@@ -68,11 +92,11 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
       4: descripcion,
       6: stock_oficina_lib or 0,
       7: dias_oficina_centro_lib or 0,
-      8: oficina_dias_lib or 0,
+      8: dias_oficina_lib or 0,
 
       10: stock_oficina_no_lib or 0,
       11: dias_oficina_centro_no_lib or 0,
-      12: oficina_dias_no_lib or 0,
+      12: dias_oficina_no_lib or 0,
 
       14: stock_almacen_lib or 0,
       15: dias_almacen_centro_lib or 0,
@@ -80,7 +104,7 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
 
       18: stock_almacen_no_lib or 0,
       19: dias_almacen_centro_no_lib or 0,
-      20: dias_almacen_oficina_no_lib or 0,
+      20: dias_almacen_no_lib or 0,
     })
 
     if oficina.lower() in dict_lead_time['optimista'][selected_tipo_venta.lower()].keys():
@@ -144,7 +168,7 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
         ws[f'Q{i}'].font = Font(bold=True, color=darkRed)
         ws[f'Q{i}'].fill = PatternFill("solid", fgColor=lightRed)
       
-      dias_almacen = dias_almacen_oficina_no_lib + leftover_days
+      dias_almacen = dias_almacen_no_lib + leftover_days
       if dias_almacen >= lead_time['Almacen']:
         ws[f'U{i}'].value = stock_almacen_no_lib
         ws[f'U{i}'].font = Font(bold=True, color=green)
