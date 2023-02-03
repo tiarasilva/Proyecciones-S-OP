@@ -14,9 +14,27 @@ import calendar
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 import holidays
+# from TD.pivotTable import pivot_table
+
+import sys
+import os
+
 start_time = time.time()
 
-# from TD.TD import main
+from PyInstaller.utils.hooks import collect_data_files
+
+datas = collect_data_files('openpyxl')
+
+# ----- 0. PATH
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+  print('running in a PyInstaller bundle')
+  os.chdir(sys._MEIPASS)
+else:
+  print('running in a normal Python process')
+
+# os.system(f'{filename_parametros}')
+# os.system(f'Inputs/Venta\ -\ Plan.xlsx')
+# os.system(f'{filename_asignaciones}')
 
 # ----- 1. Abrimos el excel de los parametros
 wb_parametros = load_workbook(filename_parametros, data_only = True, read_only = True)
@@ -104,8 +122,8 @@ name_month_3 = month_translate_EN_CL[month_3.strftime('%B').lower()]
 
 # ----- 2. Creamos el excel de resultados
 wb = Workbook()
-ws = wb.create_sheet()
-ws.title = filename
+ws = wb.active
+ws.title = 'Rango proyecciones'
 
 ws.append({
   8: f'Proyección {name_month_1} {month_1.year}',
@@ -126,18 +144,17 @@ ws.append({
   10: 'Puerto Oficina',
   11: 'Almacen oficina',
   12: 'Pesimista Proy.',
-  13: 'Optimista. Proy.',
+  13: 'Optimista Proy.',
   14: 'ETA Pesimista',
   15: 'ETA Optimista',
-  16: 'Pesimista Proy.',
-  17: 'Optimista. Proy.',
+  16: 'Pesimista Proy.2',
+  17: 'Optimista Proy.2',
   18: 'Asignación de venta',
   19: 'ETA Pesimista',
   20: 'ETA Optimista',
-  21: 'Pesimista Proy.',
-  22: 'Optimista. Proy.'
+  21: 'Pesimista Proy.3',
+  22: 'Optimista Proy.3'
 })
-del wb['Sheet']
 
 # ----- 3. Leemos Venta actual
 wb_venta = load_workbook(filename_venta, data_only=True, read_only=True)
@@ -200,14 +217,23 @@ print("--- %s 6. ---" % (time.time() - start_time))
 
 # ----- 7. Asignaciones de venta MES N+2
 wb_asignaciones = load_workbook(filename_asignaciones, read_only=True, data_only=True)
-ws_asignaciones = wb_asignaciones.active
+ws_asignaciones = wb_asignaciones['Asignaciones de venta']
 ws_asignaciones_max_row = ws_asignaciones.max_row
 dict_asignaciones = {}
+month_year = ''
+sector = ''
+office = ''
 
-for row in ws_asignaciones.iter_rows(7, ws_asignaciones_max_row - 1, values_only=True):
-  month_year = str(row[0])
-  sector = row[1]
-  office = row[2]
+for row in ws_asignaciones.iter_rows(3, ws_asignaciones_max_row - 1, values_only=True):
+  if row[0] is not None:
+    month_year = str(row[0])
+  
+  if row[1] is not None:
+    sector = row[1]
+
+  if row[2] is not None:
+    office = row[2]
+
   material = row[3]
   description = row[4]
   RV_final = row[6]
@@ -234,8 +260,10 @@ for i, row in enumerate(ws.iter_rows(3, ws.max_row, values_only = True), 3):
     ws[f'K{i}'].value = dict_stock[llave]['Almacen'] or 0
     dict_stock_all.pop(llave, None)
 
-  key_month_year = f'{month_3.month}{month_3.year}'
-  
+  key_month_year = f'{month_3.month}.{month_3.year}'
+  if month_3.month < 10:
+    key_month_year = f'0{month_3.month}.{month_3.year}'
+
   if key_month_year in dict_asignaciones:
     if llave in dict_asignaciones[key_month_year]:
       ws[f'R{i}'].value = dict_asignaciones[key_month_year][llave]['RV final']
@@ -337,10 +365,20 @@ ws['X4'].fill = PatternFill("solid", fgColor=lightGreen)
 ws['Y4'].value = 'Se suma los pedidos que llegan este mes de agua'
 print("--- %s 11. ---" % (time.time() - start_time))
 
-# ----- Sheet TD
-# main()
+
 
 wb.save(filename)
+print(wb.sheetnames)
+print(wb['Rango proyecciones'].max_row)
 wb.close()
+# ----- Sheet TD
+# main()
+# pivot_table()
+
+# user_response = input('Desea chequear la proyección?: (Si/No)')
+
+# if user_response in ['Si', 'si', 'SI']:
+#   wb_proy = load_workbook()
+
 print("--- %s seconds ---" % (time.time() - start_time))
 messageBox(dict_lead_time, selected_tipo_venta)
