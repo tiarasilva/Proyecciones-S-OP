@@ -70,19 +70,6 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
     dias_oficina_centro_no_lib = row[17] or 0
     dias_oficina_no_lib = row[11] or 0
 
-
-    # stock_oficina_lib = row[4] or 0
-    # stock_oficina_no_lib = row[5] or 0
-    # dias_oficina_centro_lib = row[7] or 0
-    # dias_oficina_centro_no_lib = row[8] or 0
-    # oficina_dias_lib = row[10] or 0
-    # oficina_dias_no_lib = row[11] or 0
-    # stock_almacen_lib = row[13] or 0
-    # stock_almacen_no_lib = row[14] or 0
-    # dias_almacen_centro_lib = row[16] or 0
-    # dias_almacen_centro_no_lib = row[17] or 0
-    # dias_almacen_lib = row[19] or 0
-    # dias_almacen_oficina_no_lib = row[20] or 0
     llave = f'{oficina.lower()}{material}'
 
     ws.append({

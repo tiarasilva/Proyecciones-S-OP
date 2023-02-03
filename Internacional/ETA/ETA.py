@@ -85,11 +85,8 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
     26: 'Considerar OPT',
   })
 
-  print("--- %s ETA 3 ---" % (time.time() - start_time))
-
   # ----- Filtrar información
   wb = load_workbook(filename_ETA, read_only=True, data_only=True)
-  print("--- %s ETA 4 ---" % (time.time() - start_time))
   ws_ETA = wb['ETA']
   ws_ETA_max_row = ws_ETA.max_row
   dict_status = {
@@ -100,6 +97,7 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
   }
   dict_leftover_date_opt = {}
   dict_leftover_date_pes = {}
+  dict_leftover_date = {}
 
   i = 3
   print("--- %s ETA 4.1 ---" % (time.time() - start_time))
@@ -124,15 +122,15 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
       lead_time_opt = dict_lead_time['optimista'][selected_tipo_venta.lower()][oficina.lower()]
       LT_agua = lead_time_opt['Destino']
       LT_destino = lead_time_opt['Almacen']
-      tiempo_final = eta + timedelta(LT_agua) + timedelta(LT_destino)
+      tiempo_final_opt = eta + timedelta(LT_agua) + timedelta(LT_destino)
 
-      if tiempo_final.month == month_1.month:
+      if tiempo_final_opt.month == month_1.month:
         ws[f'G{i}'].value = kilos
       
-      elif tiempo_final.month == month_2.month:
+      elif tiempo_final_opt.month == month_2.month:
         ws[f'H{i}'].value = kilos
       
-      elif tiempo_final.month == month_3.month:
+      elif tiempo_final_opt.month == month_3.month:
         ws[f'I{i}'].value = kilos
       
       else:
@@ -142,8 +140,8 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
       ws[f'K{i}'].value = LT_agua
       ws[f'L{i}'].value = eta + timedelta(LT_agua)
       ws[f'M{i}'].value = LT_destino
-      ws[f'N{i}'].value = tiempo_final
-
+      ws[f'N{i}'].value = tiempo_final_opt
+      
       # PESIMISTA
       lead_time_pes = dict_lead_time['pesimista'][selected_tipo_venta.lower()][oficina.lower()]
       LT_agua = lead_time_pes['Destino']
@@ -169,47 +167,47 @@ def create_ETA(ws, dict_lead_time, selected_tipo_venta, date_selected_month, dic
       ws[f'X{i}'].value = tiempo_final_pes
 
     # ---- Calendario leftover days for month
-      # OPTIMISTA
-      holidays_country = dict_holidays[tiempo_final.year][oficina.lower()]
+      for tiempo_final in [tiempo_final_pes, tiempo_final_opt]:
+        holidays_country = dict_holidays[tiempo_final.year][oficina.lower()]
+        leftover_days = 0
 
-      leftover_days = 0
-      if tiempo_final in dict_leftover_date_opt:
-        leftover_days = dict_leftover_date_opt[tiempo_final]
-      else:
-        last_day_month = calendar.monthrange(tiempo_final.year, tiempo_final.month)[1]
-        for day in range(tiempo_final.day + 1, last_day_month + 1):
-          date_day = date(tiempo_final.year, tiempo_final.month, day)
-          if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
-            leftover_days += 1
-        dict_leftover_date_opt[tiempo_final] = leftover_days
-      
-      ws[f'O{i}'].value = leftover_days
+        if oficina.lower() in dict_leftover_date.keys():
+          if tiempo_final in dict_leftover_date[oficina.lower()]:
+            leftover_days = dict_leftover_date[oficina.lower()][tiempo_final]
+          else:
+            last_day_month = calendar.monthrange(tiempo_final.year, tiempo_final.month)[1]
+            for day in range(tiempo_final.day + 1, last_day_month + 1):
+              date_day = date(tiempo_final.year, tiempo_final.month, day)
+              if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
+                leftover_days += 1
+            dict_leftover_date[oficina.lower()][tiempo_final] = leftover_days
+        else:
+          dict_leftover_date[oficina.lower()] = {}
+          last_day_month = calendar.monthrange(tiempo_final.year, tiempo_final.month)[1]
+          for day in range(tiempo_final.day + 1, last_day_month + 1):
+            date_day = date(tiempo_final.year, tiempo_final.month, day)
+            if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
+              leftover_days += 1
+          dict_leftover_date[oficina.lower()][tiempo_final] = leftover_days
 
-      if leftover_days > dict_cierre_venta[oficina.lower()]:
+      leftover_opt = dict_leftover_date[oficina.lower()][tiempo_final_opt]
+      ws[f'O{i}'].value = leftover_opt
+
+      if leftover_opt > dict_cierre_venta[oficina.lower()]:
         ws[f'P{i}'].value = 'SI'
       else:
-        ws[f'P{i}'].value = f'Mes {tiempo_final.month + 1}'
+        ws[f'P{i}'].value = f'Mes {tiempo_final_opt.month + 1}'
       
-      # PESIMISTA
-      leftover_days_pes = 0
-      if tiempo_final_pes in dict_leftover_date_pes:
-        leftover_days_pes = dict_leftover_date_pes[tiempo_final_pes]
-      else:
-        last_day_month = calendar.monthrange(tiempo_final.year, tiempo_final.month)[1]
-        for day in range(tiempo_final_pes.day + 1, last_day_month + 1):
-          date_day = date(tiempo_final.year, tiempo_final.month, day)
-          if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
-            leftover_days_pes += 1
-        dict_leftover_date_pes[tiempo_final_pes] = leftover_days_pes
-      
-      ws[f'Y{i}'].value = leftover_days_pes
+      leftover_pes = dict_leftover_date[oficina.lower()][tiempo_final_pes]
+      ws[f'Y{i}'].value = leftover_pes
 
-      if leftover_days_pes > dict_cierre_venta[oficina.lower()]:
+      if leftover_pes > dict_cierre_venta[oficina.lower()]:
         ws[f'Z{i}'].value = 'SI'
       else:
         ws[f'Z{i}'].value = f'Mes {tiempo_final_pes.month + 1}'
 
       i += 1
+  
   print("--- %s ETA 5 ---" % (time.time() - start_time))
 # ----- Corremos estilos y cerramos
   wb.close()

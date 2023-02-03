@@ -10,7 +10,7 @@ def messageBox(dict_lead_time, selected_tipo_venta):
   app.configure(bg='#ffffff')
 
   # Info Image
-  information_image = Image.open("Notice.png")
+  information_image = Image.open("Img/Notice.png")
   information_image = information_image.resize((50, 50))
   information_image = ImageTk.PhotoImage(information_image)
   logo_label = tk.Label(image = information_image, borderwidth=0, bg = 'white')
@@ -51,22 +51,26 @@ def messageBox(dict_lead_time, selected_tipo_venta):
   # Data
   wb_dias_stock = load_workbook(filename_dias, read_only=True, data_only=True)
   ws_dias_stock = wb_dias_stock.active
+  sector = ''
+  oficina = ''
 
-  for i, row in enumerate(ws_dias_stock.iter_rows(9, ws_dias_stock.max_row, values_only=True), 4):
-    if row[1] is None:
+  for i, row in enumerate(ws_dias_stock.iter_rows(5, ws_dias_stock.max_row, values_only=True), 4):
+    if row[2] is None:
       break
-    # Stock No liberado
-    sector = row[0]
-    oficina = row[1]
+    
+    if row[0] is not None:
+      sector = row[0]
+    
+    if row[1] is not None:
+      oficina = row[1]
+    
     material = row[2]
     descripcion = row[3]
-    stock_oficina_no_lib = row[5] or 0
-    dias_oficina_centro_no_lib = row[8] or 0
-    oficina_dias_no_lib = row[11] or 0
-    stock_almacen_no_lib = row[14] or 0
-    dias_almacen_centro_no_lib = row[17] or 0
-    dias_almacen_oficina_no_lib = row[20] or 0
-    llave = f'{oficina.lower()}{material}'
+
+    stock_oficina_no_lib = row[16] or 0
+    dias_oficina_centro_no_lib = row[17] or 0
+    dias_oficina_no_lib = row[11] or 0
+
     lead_time = dict_lead_time['optimista'][selected_tipo_venta.lower()][oficina.lower()]
 
     if dias_oficina_centro_no_lib >= lead_time['Destino']:
