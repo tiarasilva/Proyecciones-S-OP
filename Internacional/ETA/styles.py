@@ -9,6 +9,36 @@ start_time = time.time()
 def run_styles(ws):
   thin = Side(border_style="thin", color=white)
 
+  a_col = ws.column_dimensions['A']
+  a_col.font = Font(bold=False, color=blue)
+  a_col.fill = PatternFill("solid", fgColor=lightlightBlue)
+  a_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+  b_col = ws.column_dimensions['B']
+  b_col.font = Font(bold=False, color=blue)
+  b_col.fill = PatternFill("solid", fgColor=lightlightBlue)
+  b_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+  c_col = ws.column_dimensions['C']
+  c_col.font = Font(bold=False, color=blue)
+  c_col.fill = PatternFill("solid", fgColor=lightlightBlue)
+  c_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+  d_col = ws.column_dimensions['D']
+  d_col.font = Font(bold=False, color=blue)
+  d_col.fill = PatternFill("solid", fgColor=lightlightBlue)
+  d_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+  e_col = ws.column_dimensions['E']
+  e_col.font = Font(bold=False, color=blue)
+  e_col.fill = PatternFill("solid", fgColor=lightlightBlue)
+  e_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+  f_col = ws.column_dimensions['F']
+  f_col.font = Font(bold=False, color=blue)
+  f_col.fill = PatternFill("solid", fgColor=lightlightBlue)
+  f_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
   for i in range(1, ws.max_column + 1):
     ws[f'{get_column_letter(i)}2'].font = Font(bold=True, color=white)
     ws[f'{get_column_letter(i)}2'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
@@ -36,6 +66,7 @@ def run_styles(ws):
   # Merge
   ws.merge_cells('G1:P1')
   ws.merge_cells('Q1:Z1')
+
   ws['G1'].font = Font(bold=True, color=white)
   ws['G1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
   ws['G1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
@@ -47,18 +78,13 @@ def run_styles(ws):
   ws['Q1'].fill = PatternFill("solid", fgColor=lightBlue)
 
 def run_number_format(ws):
-  print("--- %s ETA 6.2 ---" % (time.time() - start_time))
+  max_row = ws.max_row
   thin = Side(border_style="thin", color=white)
-  border_white = Border(top=thin, left=thin, right=thin, bottom=thin)
-
   line_blue = Side(border_style="thin", color=blue)
-  font_blue = Font(bold=False, color=blue)
-  border_light_blue = Border(left=line_blue)
-
-  fill_light_blue = PatternFill("solid", fgColor=lightlightBlue)
 
   print("--- %s ETA 6.3 ---" % (time.time() - start_time))
-  for i in range(3, ws.max_row + 1):
+
+  for i in range(3, max_row + 1):
     ws[f'G{i}'].number_format = BUILTIN_FORMATS[3]
     ws[f'H{i}'].number_format = BUILTIN_FORMATS[3]
     ws[f'I{i}'].number_format = BUILTIN_FORMATS[3]
@@ -75,36 +101,35 @@ def run_number_format(ws):
     ws[f'U{i}'].number_format = BUILTIN_FORMATS[4]
     ws[f'W{i}'].number_format = BUILTIN_FORMATS[4]
 
-    # for j in range(1, 7):
-    ws[f'A{i}'].font = font_blue
-    ws[f'A{i}'].fill = fill_light_blue
-    ws[f'A{i}'].border = border_white
+    # ws[f'A{i}'].font = Font(bold=False, color=blue)
+    # ws[f'A{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'A{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws[f'B{i}'].font = font_blue
-    ws[f'B{i}'].fill = fill_light_blue
-    ws[f'B{i}'].border = border_white
+    # ws[f'B{i}'].font = Font(bold=False, color=blue)
+    # ws[f'B{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'B{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws[f'C{i}'].font = font_blue
-    ws[f'C{i}'].fill = fill_light_blue
-    ws[f'C{i}'].border = border_white
+    # ws[f'C{i}'].font = Font(bold=False, color=blue)
+    # ws[f'C{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'C{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws[f'D{i}'].font = font_blue
-    ws[f'D{i}'].fill = fill_light_blue
-    ws[f'D{i}'].border = border_white
+    # ws[f'D{i}'].font = Font(bold=False, color=blue)
+    # ws[f'D{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'D{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws[f'E{i}'].font = font_blue
-    ws[f'E{i}'].fill = fill_light_blue
-    ws[f'E{i}'].border = border_white
+    # ws[f'E{i}'].font = Font(bold=False, color=blue)
+    # ws[f'E{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'E{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws[f'F{i}'].font = font_blue
-    ws[f'F{i}'].fill = fill_light_blue
-    ws[f'F{i}'].border = border_white
+    # ws[f'F{i}'].font = Font(bold=False, color=blue)
+    # ws[f'F{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'F{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws[f'G{i}'].border = border_light_blue
-    ws[f'K{i}'].border = border_light_blue
-    ws[f'Q{i}'].border = border_light_blue
-    ws[f'U{i}'].border = border_light_blue
-    ws[f'AA{i}'].border = border_light_blue
+    ws[f'G{i}'].border = Border(left=line_blue)
+    ws[f'K{i}'].border = Border(left=line_blue)
+    ws[f'Q{i}'].border = Border(left=line_blue)
+    ws[f'U{i}'].border = Border(left=line_blue)
+    ws[f'AA{i}'].border = Border(left=line_blue)
 
     ws[f'O{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'P{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
