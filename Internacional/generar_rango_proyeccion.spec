@@ -1,4 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_submodules
+
+hiddenimports = []
+hiddenimports += collect_submodules('openpyxl')
+hiddenimports += collect_submodules('holidays')
 
 
 block_cipher = None
@@ -8,8 +13,8 @@ a = Analysis(
     ['generar_rango_proyeccion.py'],
     pathex=[],
     binaries=[],
-    datas=[('Inputs/Parametros.xlsx', 'Inputs'), ('Inputs/Venta - Plan.xlsx', 'Inputs'), ('Inputs/stock.xlsx', 'Inputs'), ('Inputs/ETA.xlsx', 'Inputs'), ('Inputs/Asignaciones.xlsx', 'Inputs'), ('Inputs/Proyecciones de Venta - Sem 04.xlsx', 'Inputs'), ('Img/Notice.png', 'Img')],
-    hiddenimports=[],
+    datas=[('Inputs/Parametros.xlsx', 'Inputs'), ('Inputs/Venta - Plan.xlsx', 'Inputs'), ('Inputs/stock.xlsx', 'Inputs'), ('Inputs/ETA.xlsx', 'Inputs'), ('Inputs/Asignaciones.xlsx', 'Inputs'), ('Img/Notice.png', 'Img')],
+    hiddenimports=hiddenimports,
     hookspath=['.'],
     hooksconfig={},
     runtime_hooks=[],
@@ -41,5 +46,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['py.ico'],
 )
