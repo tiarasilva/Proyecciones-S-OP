@@ -121,6 +121,10 @@ name_month_2 = month_translate_EN_CL[month_2.strftime('%B').lower()]
 name_month_3 = month_translate_EN_CL[month_3.strftime('%B').lower()]
 
 # ----- 2. Creamos el excel de resultados
+wb2 = Workbook()
+wb2.save('Probando.xlsx')
+wb2.close()
+
 wb = Workbook()
 ws = wb.active
 ws.title = 'Rango proyecciones'

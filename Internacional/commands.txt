@@ -1,0 +1,5 @@
+# Run PyInstaller with all data on WINDOWS:
+py -m PyInstaller --collect-submodules=openpyxl --collect-submodules=holidays --additional-hooks-dir=. --add-data "Inputs/Parametros.xlsx;Inputs" --add-data "Inputs/Venta - Plan.xlsx;Inputs" --add-data "Inputs/stock.xlsx;Inputs" --add-data "Inputs/ETA.xlsx;Inputs" --add-data "Inputs/Asignaciones.xlsx;Inputs" --add-data "Img/Notice.png;Img" --onefile generar_rango_proyeccion.py
+
+## Install holidays library
+py -m pip install holidays

@@ -1,4 +1,0 @@
-([('generar_rango_proyeccion',
-   '/Users/tiarasilva/Documents/2022-S2/Práctica '
-   'II/Agrosuper/Proyecciones/Proyecciones-S-OP/Internacional/dist/generar_rango_proyeccion',
-   'EXECUTABLE')],)
