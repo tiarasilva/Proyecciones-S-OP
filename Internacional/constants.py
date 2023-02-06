@@ -1,5 +1,6 @@
 # Nombre de los archivos
 filename = 'Rango proyecciones.xlsx'
+filename_name = 'Rango proyecciones'
 filename_parametros = 'Inputs/Parametros.xlsx'
 filename_venta = 'Inputs/Venta - Plan.xlsx'
 filename_dias = 'Inputs/stock.xlsx'

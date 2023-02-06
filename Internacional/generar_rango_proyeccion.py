@@ -309,13 +309,13 @@ for i, row in enumerate(ws.iter_rows(3, ws.max_row, values_only = True), 3):
     ws[f'V{i}'].value = f'= {porcentaje} * R{i} + T{i}'
 
     # ----- Stock planta	Puerto Chile	Centro Agua
-  ws[f'I{i}'].value = f"=SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$5)"
-  ws[f'O{i}'].value = f"=SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$7)"
-  ws[f'T{i}'].value = f"=SUMIFS('Stock - ETA'!$I$3:I{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename}'!$X$8)"
+  ws[f'I{i}'].value = f"=SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_name}'!$X$5)"
+  ws[f'O{i}'].value = f"=SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_name}'!$X$5) + SUMIFS('Stock - ETA'!$G$3:G{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_name}'!$X$7)"
+  ws[f'T{i}'].value = f"=SUMIFS('Stock - ETA'!$I$3:I{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_name}'!$X$5) + SUMIFS('Stock - ETA'!$H$3:H{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$P$3:P{ETA_maxRow},'{filename_name}'!$X$8)"
 
-  ws[f'H{i}'].value = f"=SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$5)"
-  ws[f'N{i}'].value = f"=SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$7)"
-  ws[f'S{i}'].value = f"=SUMIFS('Stock - ETA'!$S$3:S{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$5) + SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename}'!$X$8)"
+  ws[f'H{i}'].value = f"=SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_name}'!$X$5)"
+  ws[f'N{i}'].value = f"=SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_name}'!$X$5) + SUMIFS('Stock - ETA'!$Q$3:Q{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_name}'!$X$7)"
+  ws[f'S{i}'].value = f"=SUMIFS('Stock - ETA'!$S$3:S{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_name}'!$X$5) + SUMIFS('Stock - ETA'!$R$3:R{ETA_maxRow},'Stock - ETA'!$E$3:E{ETA_maxRow},'{filename_name}'!B{i},'Stock - ETA'!$Z$3:Z{ETA_maxRow},'{filename_name}'!$X$8)"
 
 print("--- %s 7. ---" % (time.time() - start_time))
 # ----- Stock sin Venta ni Plan
