@@ -6,44 +6,21 @@ from constants import *
 import time
 start_time = time.time()
 
-def run_styles(ws):
+def run_styles(ws, start_title):
   thin = Side(border_style="thin", color=white)
 
-  a_col = ws.column_dimensions['A']
-  a_col.font = Font(bold=False, color=blue)
-  a_col.fill = PatternFill("solid", fgColor=lightlightBlue)
-  a_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
-
-  b_col = ws.column_dimensions['B']
-  b_col.font = Font(bold=False, color=blue)
-  b_col.fill = PatternFill("solid", fgColor=lightlightBlue)
-  b_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
-
-  c_col = ws.column_dimensions['C']
-  c_col.font = Font(bold=False, color=blue)
-  c_col.fill = PatternFill("solid", fgColor=lightlightBlue)
-  c_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
-
-  d_col = ws.column_dimensions['D']
-  d_col.font = Font(bold=False, color=blue)
-  d_col.fill = PatternFill("solid", fgColor=lightlightBlue)
-  d_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
-
-  e_col = ws.column_dimensions['E']
-  e_col.font = Font(bold=False, color=blue)
-  e_col.fill = PatternFill("solid", fgColor=lightlightBlue)
-  e_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
-
-  f_col = ws.column_dimensions['F']
-  f_col.font = Font(bold=False, color=blue)
-  f_col.fill = PatternFill("solid", fgColor=lightlightBlue)
-  f_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  for letter in range(1, 7):
+    letter = get_column_letter(letter)
+    a_col = ws.column_dimensions[letter]
+    a_col.font = Font(bold=False, color=blue)
+    a_col.fill = PatternFill("solid", fgColor=lightlightBlue)
+    a_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
   for i in range(1, ws.max_column + 1):
-    ws[f'{get_column_letter(i)}2'].font = Font(bold=True, color=white)
-    ws[f'{get_column_letter(i)}2'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'{get_column_letter(i)}2'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
-    ws[f'{get_column_letter(i)}2'].fill = PatternFill("solid", fgColor=lightBlue)
+    ws[f'{get_column_letter(i)}{start_title}'].font = Font(bold=True, color=white)
+    ws[f'{get_column_letter(i)}{start_title}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    ws[f'{get_column_letter(i)}{start_title}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+    ws[f'{get_column_letter(i)}{start_title}'].fill = PatternFill("solid", fgColor=lightBlue)
 
   # Tamaños
   ws.column_dimensions['A'].width = 10
@@ -52,8 +29,10 @@ def run_styles(ws):
   ws.column_dimensions['D'].width = 10
   ws.column_dimensions['E'].width = 22
   ws.column_dimensions['F'].width = 12
-
   ws.column_dimensions['L'].width = 12
+
+def VL_styles(ws):
+  thin = Side(border_style="thin", color=white)
   ws.column_dimensions['N'].width = 12
   ws.column_dimensions['P'].width = 12
 

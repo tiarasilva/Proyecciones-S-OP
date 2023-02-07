@@ -7,7 +7,7 @@ from constants import *
 import time
 start_time = time.time()
 
-def run_styles(ws):
+def run_styles(ws, venta):
   thin = Side(border_style="thin", color=white)
   line_blue = Side(border_style="thin", color=blue)
 
@@ -66,19 +66,35 @@ def run_styles(ws):
     ws[f'E{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
     # Linea separadora azul
-    ws[f'F{i}'].border = Border(left=line_blue)
-    ws[f'H{i}'].border = Border(left=line_blue)
-    ws[f'N{i}'].border = Border(left=line_blue)
-    ws[f'R{i}'].border = Border(left=line_blue)
-    ws[f'W{i}'].border = Border(left=line_blue)
+    if venta == 'local':
+      ws[f'F{i}'].border = Border(left=line_blue)
+      ws[f'H{i}'].border = Border(left=line_blue)
+      ws[f'N{i}'].border = Border(left=line_blue)
+      ws[f'R{i}'].border = Border(left=line_blue)
+      ws[f'W{i}'].border = Border(left=line_blue)
 
-    # Bold optimista y pesimista
-    ws[f'L{i}'].font = Font(bold=True)
-    ws[f'M{i}'].font = Font(bold=True)
-    ws[f'P{i}'].font = Font(bold=True)
-    ws[f'Q{i}'].font = Font(bold=True)
-    ws[f'U{i}'].font = Font(bold=True)
-    ws[f'V{i}'].font = Font(bold=True)
+      # Bold optimista y pesimista
+      ws[f'L{i}'].font = Font(bold=True)
+      ws[f'M{i}'].font = Font(bold=True)
+      ws[f'P{i}'].font = Font(bold=True)
+      ws[f'Q{i}'].font = Font(bold=True)
+      ws[f'U{i}'].font = Font(bold=True)
+      ws[f'V{i}'].font = Font(bold=True)
+    
+    else:
+      ws[f'F{i}'].border = Border(left=line_blue)
+      ws[f'H{i}'].border = Border(left=line_blue)
+      ws[f'L{i}'].border = Border(left=line_blue)
+      ws[f'P{i}'].border = Border(left=line_blue)
+      ws[f'U{i}'].border = Border(left=line_blue)
+
+      ws[f'J{i}'].font = Font(bold=True)
+      ws[f'K{i}'].font = Font(bold=True)
+      ws[f'N{i}'].font = Font(bold=True)
+      ws[f'O{i}'].font = Font(bold=True)
+      ws[f'S{i}'].font = Font(bold=True)
+      ws[f'T{i}'].font = Font(bold=True)
+
 
 def run_number_format(ws):
   print("--- %s NORMAL 6.1 ---" % (time.time() - start_time))
@@ -89,4 +105,3 @@ def run_number_format(ws):
       ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
       ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
   print("--- %s NORMAL 6.2 ---" % (time.time() - start_time))
-    
