@@ -211,9 +211,12 @@ wb_venta = load_workbook(filename_venta, data_only=True, read_only=True)
 ws_venta = wb_venta['Venta - Plan']
 
 for row in ws_venta.iter_rows(7, ws_venta.max_row, values_only=True):
-  sector, material = row[1], row[2]
-  descripcion, oficina = row[3], row[5]
-  plan_total, venta_total = row[6], row[7]
+  sector = row[1]
+  material = row[2]
+  descripcion = row[3]
+  oficina = row[5]
+  plan_total = row[6]
+  venta_total = row[7]
   
   if sector is not None and descripcion is not None:
     ws = ws_VD
