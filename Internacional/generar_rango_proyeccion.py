@@ -9,6 +9,7 @@ from ETA.ETA_VD import create_ETA_VD
 from MessageBox.MessageBox import messageBox
 from styles import run_styles, run_number_format
 from constants import *
+# from teams import read_teams
 
 import time
 import calendar
@@ -52,8 +53,8 @@ for row in ws_parametros_dias_venta.iter_rows(2, ws_dias_max, values_only = True
   dict_cierre_venta[oficina.lower()] = dias_cierre
 
 # FECHAS
-selected_tipo_venta = ws_parametros_venta['B1'].value
-selected_month = ws_parametros_venta['B2'].value
+selected_month = ws_parametros_venta['B1'].value
+selected_week = ws_parametros_venta['B2'].value
 number_selected_month = month_number[selected_month.lower()]
 today = datetime.now()
 date_selected_month = date(today.year, number_selected_month, 1)
@@ -459,6 +460,8 @@ for key, value in dict_stock.items():
   
 print("--- %s 9. ---" % (time.time() - start_time))
 
+# read_teams()
+
 # ----- Guardar la información
 run_styles(ws_VL, 'local')
 run_styles(ws_VD, 'di')
@@ -496,4 +499,4 @@ wb_VD.close()
 #   wb_proy = load_workbook()
 
 print("--- %s seconds ---" % (time.time() - start_time))
-messageBox(dict_lead_time, selected_tipo_venta)
+messageBox(dict_lead_time, 'local')
