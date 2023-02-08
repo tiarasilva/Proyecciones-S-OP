@@ -9,7 +9,6 @@ from ETA.ETA_VD import create_ETA_VD
 from MessageBox.MessageBox import messageBox
 from styles import run_styles, run_number_format
 from constants import *
-# from teams import read_teams
 
 import time
 import calendar
@@ -22,10 +21,6 @@ import sys
 import os
 
 start_time = time.time()
-
-from PyInstaller.utils.hooks import collect_data_files
-
-datas = collect_data_files('openpyxl')
 
 # ----- 0. PATH
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
@@ -177,7 +172,7 @@ ws_VL.append({
   22: 'Optimista Proy.3'      # V
 })
 
-# ----- Creamos el excel de resultados VENTA DIRECTA
+# ----- y VENTA DIRECTA
 wb_VD = Workbook()
 ws_VD = wb_VD.active
 ws_VD.title = sheet_name
@@ -216,12 +211,10 @@ wb_venta = load_workbook(filename_venta, data_only=True, read_only=True)
 ws_venta = wb_venta['Venta - Plan']
 
 for row in ws_venta.iter_rows(7, ws_venta.max_row, values_only=True):
-  sector = row[1]
-  material = row[2]
-  descripcion = row[3]
-  oficina = row[5]
-  plan_total = row[6]
-  venta_total = row[7]
+  sector, material = row[1], row[2]
+  descripcion, oficina = row[3], row[5]
+  plan_total, venta_total = row[6], row[7]
+  
   if sector is not None and descripcion is not None:
     ws = ws_VD
     if oficina.lower() in dict_lead_time['optimista']['local'].keys():
@@ -235,11 +228,6 @@ for row in ws_venta.iter_rows(7, ws_venta.max_row, values_only=True):
                 6: venta_total or 0, 
                 7: plan_total or 0,
                 8: 0,
-                10: 0,
-                11: 0,
-                14: 0,
-                18: 0,
-                19: 0
               })
 
 wb_venta.close()
@@ -459,8 +447,6 @@ for key, value in dict_stock.items():
     
   
 print("--- %s 9. ---" % (time.time() - start_time))
-
-# read_teams()
 
 # ----- Guardar la información
 run_styles(ws_VL, 'local')
