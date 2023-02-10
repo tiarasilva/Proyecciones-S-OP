@@ -7,8 +7,7 @@ from datetime import datetime, date
 import holidays
 
 # ----- Creamos el sheet
-def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
-  selected_month = month_translate_CL_EN[selected_month.lower()]
+def stock(ws, dict_lead_time):
   dict_message = {'Puerto Oficina': {}, 'Almacen': {}}
 
   ws.append({
@@ -41,7 +40,8 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
 
   sector = ''
   oficina = ''
-  for i, row in enumerate(ws_dias_stock.iter_rows(5, ws_dias_stock.max_row - 1, values_only=True), 4):
+  i = 4
+  for row in ws_dias_stock.iter_rows(5, ws_dias_stock.max_row - 1, values_only=True):
     if row[2] is None:
       break
     
@@ -72,29 +72,24 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
 
     llave = f'{oficina.lower()}{material}'
 
-    ws.append({
-      1: sector,
-      2: oficina,
-      3: int(material),
-      4: descripcion,
-      6: stock_oficina_lib or 0,
-      7: dias_oficina_centro_lib or 0,
-      8: dias_oficina_lib or 0,
+    if oficina.lower() in dict_lead_time['optimista']['Venta Local'].keys():
+      ws[f'A{i}'].value = sector
+      ws[f'B{i}'].value = oficina
+      ws[f'C{i}'].value = int(material)
+      ws[f'D{i}'].value = descripcion
+      ws[f'F{i}'].value = stock_oficina_lib or 0
+      ws[f'G{i}'].value = dias_oficina_centro_lib or 0
+      ws[f'H{i}'].value = dias_oficina_lib or 0
+      ws[f'J{i}'].value = stock_oficina_no_lib or 0
+      ws[f'K{i}'].value = dias_oficina_centro_no_lib or 0
+      ws[f'L{i}'].value = dias_oficina_no_lib or 0
+      ws[f'N{i}'].value = stock_almacen_lib or 0
+      ws[f'O{i}'].value = dias_almacen_centro_lib or 0
+      ws[f'P{i}'].value = dias_almacen_lib or 0
+      ws[f'R{i}'].value = stock_almacen_no_lib or 0
+      ws[f'S{i}'].value = dias_almacen_centro_no_lib or 0
+      ws[f'T{i}'].value = dias_almacen_no_lib or 0
 
-      10: stock_oficina_no_lib or 0,
-      11: dias_oficina_centro_no_lib or 0,
-      12: dias_oficina_no_lib or 0,
-
-      14: stock_almacen_lib or 0,
-      15: dias_almacen_centro_lib or 0,
-      16: dias_almacen_lib or 0,
-
-      18: stock_almacen_no_lib or 0,
-      19: dias_almacen_centro_no_lib or 0,
-      20: dias_almacen_no_lib or 0,
-    })
-
-    if oficina.lower() in dict_lead_time['optimista'][selected_tipo_venta.lower()].keys():
       today = datetime.now()
       holidays_country = holidays.CL(years=today.year)
 
@@ -118,7 +113,7 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
             business_days += 1
       
       leftover_days = business_days - today.day 
-      lead_time = dict_lead_time['optimista'][selected_tipo_venta.lower()][oficina.lower()]
+      lead_time = dict_lead_time['optimista']['Venta Local'][oficina.lower()]
     
       # PUERTO OFICINA
       # Stock liberado
@@ -164,6 +159,7 @@ def stock(ws, dict_lead_time, selected_tipo_venta, selected_month):
         ws[f'U{i}'].value = 0
         ws[f'U{i}'].font = Font(bold=True, color=darkRed)
         ws[f'U{i}'].fill = PatternFill("solid", fgColor=lightRed)
+      i += 1  
 
   wb_dias_stock.close()    
 

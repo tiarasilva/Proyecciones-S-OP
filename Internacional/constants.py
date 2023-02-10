@@ -1,10 +1,11 @@
 # Nombre de los archivos
+filename = 'Rango proyecciones.xlsx'
 filename_VD = 'Rango proyecciones - VD.xlsx'
 filename_VL = 'Rango proyecciones - VL.xlsx'
 filename_parametros = 'Inputs/Parametros.xlsx'
 filename_venta = 'Inputs/Venta - Plan.xlsx'
 filename_dias = 'Inputs/stock.xlsx'
-filename_ETA = 'Inputs/ETA.xlsx'
+filename_ETA = 'Inputs/ETA - Febrero.xlsx'
 filename_asignaciones = 'Inputs/Asignaciones.xlsx'
 filename_proyeccion = 'Inputs/Proyecciones de Venta - Sem 04.xlsx'
 

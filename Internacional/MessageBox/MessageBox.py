@@ -71,7 +71,7 @@ def messageBox(dict_lead_time, selected_tipo_venta):
     dias_oficina_centro_no_lib = row[17] or 0
     dias_oficina_no_lib = row[11] or 0
 
-    lead_time = dict_lead_time['optimista'][selected_tipo_venta.lower()][oficina.lower()]
+    lead_time = dict_lead_time['optimista'][selected_tipo_venta][oficina.lower()]
 
     if dias_oficina_centro_no_lib >= lead_time['Destino']:
       tree.insert('', 'end', values = (i, f'{oficina.lower()}{material}', stock_oficina_no_lib, round(dias_oficina_centro_no_lib, 1), round(lead_time['Destino'], 1)))

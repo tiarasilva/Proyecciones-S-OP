@@ -10,12 +10,6 @@ import holidays
 start_time = time.time()
 
 def create_ETA_VD(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_holidays):
-  # HOLIDAYS
-  today = datetime.now()
-  last_year = today.year - 1
-  this_year = today.year
-  next_year = today.year + 1
-
   month_1 = date_selected_month
   month_2 = date_selected_month + relativedelta(months=1)
   month_3 = date_selected_month + relativedelta(months=2)
@@ -61,8 +55,8 @@ def create_ETA_VD(ws, dict_lead_time, date_selected_month, dict_cierre_venta, di
     pedido = row[0]
     eta = row[10]
     material = row[11]
-    oficina = row[21]
-    n_sector = row[28]
+    oficina = row[20]
+    n_sector = row[27]
     kilos = row[33]
     eta = datetime.date(eta)
 

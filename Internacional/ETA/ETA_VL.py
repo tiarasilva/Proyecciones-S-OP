@@ -77,8 +77,8 @@ def create_ETA_VL(ws, dict_lead_time, date_selected_month, dict_cierre_venta, di
     pedido = row[0]
     eta = row[10]
     material = row[11]
-    oficina = row[21]
-    n_sector = row[28]
+    oficina = row[20]
+    n_sector = row[27]
     kilos = row[33]
     eta = datetime.date(eta)
 
@@ -92,9 +92,9 @@ def create_ETA_VL(ws, dict_lead_time, date_selected_month, dict_cierre_venta, di
 
       # OPTIMISTA
       lead_time_opt = dict_lead_time['optimista']['local'][oficina.lower()]
-      LT_agua = lead_time_opt['Destino']
-      LT_destino = lead_time_opt['Almacen']
-      tiempo_final_opt = eta + timedelta(LT_agua) + timedelta(LT_destino)
+      LT_destino = lead_time_opt['Destino']
+      LT_almacen = lead_time_opt['Almacen']
+      tiempo_final_opt = eta + timedelta(LT_destino) + timedelta(LT_almacen)
 
       if tiempo_final_opt.month == month_1.month:
         ws[f'G{i}'].value = kilos
@@ -109,16 +109,16 @@ def create_ETA_VL(ws, dict_lead_time, date_selected_month, dict_cierre_venta, di
         ws[f'J{i}'].value = kilos
         ws[f'N{i}'].fill = PatternFill("solid", fgColor=yellow)
 
-      ws[f'K{i}'].value = LT_agua
-      ws[f'L{i}'].value = eta + timedelta(LT_agua)
-      ws[f'M{i}'].value = LT_destino
+      ws[f'K{i}'].value = LT_destino
+      ws[f'L{i}'].value = eta + timedelta(LT_destino)
+      ws[f'M{i}'].value = LT_almacen
       ws[f'N{i}'].value = tiempo_final_opt
       
       # PESIMISTA
       lead_time_pes = dict_lead_time['pesimista']['local'][oficina.lower()]
-      LT_agua = lead_time_pes['Destino']
-      LT_destino = lead_time_pes['Almacen']
-      tiempo_final_pes = eta + timedelta(LT_agua) + timedelta(LT_destino)
+      LT_destino = lead_time_pes['Destino']
+      LT_almacen = lead_time_pes['Almacen']
+      tiempo_final_pes = eta + timedelta(LT_destino) + timedelta(LT_almacen)
 
       if tiempo_final_pes.month == month_1.month:
         ws[f'Q{i}'].value = kilos
@@ -133,9 +133,9 @@ def create_ETA_VL(ws, dict_lead_time, date_selected_month, dict_cierre_venta, di
         ws[f'T{i}'].value = kilos
         ws[f'T{i}'].fill = PatternFill("solid", fgColor=yellow)
 
-      ws[f'U{i}'].value = LT_agua
-      ws[f'V{i}'].value = eta + timedelta(LT_agua)
-      ws[f'W{i}'].value = LT_destino
+      ws[f'U{i}'].value = LT_destino
+      ws[f'V{i}'].value = eta + timedelta(LT_destino)
+      ws[f'W{i}'].value = LT_almacen
       ws[f'X{i}'].value = tiempo_final_pes
 
     # ---- Calendario leftover days for month

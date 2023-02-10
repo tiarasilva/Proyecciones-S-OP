@@ -48,17 +48,29 @@ for row in ws_parametros_dias_venta.iter_rows(2, ws_dias_max, values_only = True
   dict_cierre_venta[oficina.lower()] = dias_cierre
 
 # FECHAS
-selected_month = ws_parametros_venta['B1'].value
-selected_week = ws_parametros_venta['B2'].value
+selected_year = ws_parametros_venta['B1'].value
+selected_month = ws_parametros_venta['B2'].value
+selected_week = ws_parametros_venta['B3'].value
 number_selected_month = month_number[selected_month.lower()]
 today = datetime.now()
-date_selected_month = date(today.year, number_selected_month, 1)
+date_selected_month = date(int(selected_year), number_selected_month, 1)
 last_day_month = calendar.monthrange(today.year, today.month)[1]
 
+# Nombre fechas
+month_1 = date_selected_month
+month_2 = date_selected_month + relativedelta(months=1)
+month_3 = date_selected_month + relativedelta(months=2)
+
+name_month_1 = month_translate_EN_CL[month_1.strftime('%B').lower()]
+name_month_2 = month_translate_EN_CL[month_2.strftime('%B').lower()]
+name_month_3 = month_translate_EN_CL[month_3.strftime('%B').lower()]
+
+selected_month_year = f'{month_1.strftime("%m")}.{month_1.year}'
+
 # HOLIDAYS
-last_year = today.year - 1
-this_year = today.year
-next_year = today.year + 1
+last_year = month_1.year - 1
+this_year = month_1.year
+next_year = month_1.year + 1
 
 dict_holidays = {
   last_year: {
@@ -127,16 +139,7 @@ for row in ws_porcentaje.iter_rows(2, ws_porcentaje.max_row, values_only=True):
 
 wb_parametros.close()
 
-# ----. Nombre fechas
-month_1 = date_selected_month
-month_2 = date_selected_month + relativedelta(months=1)
-month_3 = date_selected_month + relativedelta(months=2)
-
-name_month_1 = month_translate_EN_CL[month_1.strftime('%B').lower()]
-name_month_2 = month_translate_EN_CL[month_2.strftime('%B').lower()]
-name_month_3 = month_translate_EN_CL[month_3.strftime('%B').lower()]
-
-# ----- 2. Creamos el excel de resultados VENTA LOCAL
+# ----- 2. Creamos el excel de resultados VENTA LOCAL y VENTA DIRECTA
 wb_VL = Workbook()
 ws_VL = wb_VL.active
 ws_VL.title = sheet_name
@@ -172,7 +175,6 @@ ws_VL.append({
   22: 'Optimista Proy.3'      # V
 })
 
-# ----- y VENTA DIRECTA
 wb_VD = Workbook()
 ws_VD = wb_VD.active
 ws_VD.title = sheet_name
@@ -211,33 +213,34 @@ wb_venta = load_workbook(filename_venta, data_only=True, read_only=True)
 ws_venta = wb_venta['Venta - Plan']
 
 for row in ws_venta.iter_rows(7, ws_venta.max_row, values_only=True):
+  month_year = row[0]
   sector = row[1]
-  material = row[2]
-  descripcion = row[3]
-  oficina = row[5]
-  plan_total = row[6]
-  venta_total = row[7]
+  oficina = row[3]
+  material = row[4]
+  descripcion = row[5]
+  venta_total = row[6]
+  plan_total = row[7]
   
-  if sector is not None and descripcion is not None:
+  if oficina is not None:
     ws = ws_VD
     if oficina.lower() in dict_lead_time['optimista']['local'].keys():
       ws = ws_VL
-
-    ws.append({ 1: sector,
-                2: f'{oficina.lower()}{material}',
-                3: oficina, 
-                4: int(material), 
-                5: descripcion, 
-                6: venta_total or 0, 
-                7: plan_total or 0,
-                8: 0,
-              })
+    if month_year == selected_month_year:
+      ws.append({ 1: sector,
+                  2: f'{oficina.lower()}{material}',
+                  3: oficina, 
+                  4: int(material), 
+                  5: descripcion, 
+                  6: venta_total or 0, 
+                  7: plan_total or 0,
+                  18: 0
+                })
 
 wb_venta.close()
 
 # ----- 4. Creamos la sheet Stock - Oficina
 ws_VL_stock_oficina = wb_VL.create_sheet('Stock - Oficina')
-stock(ws_VL_stock_oficina, dict_lead_time, 'local', selected_month)
+stock(ws_VL_stock_oficina, dict_lead_time, 'local')
 wb_VL.save(filename_VL)
 
 # ----- 5. Creamos la sheet Stock - Oficina
@@ -303,10 +306,7 @@ wb_asignaciones.close()
 
 # -----
 dict_leftover_country = {}
-
-key_month_year = f'{month_3.month}.{month_3.year}'
-if month_3.month < 10:
-  key_month_year = f'0{month_3.month}.{month_3.year}'
+key_month_year = f'{month_3.strftime("%m")}.{month_3.year}'
 
 # VENTA LOCAL
 for i, row in enumerate(ws_VL.iter_rows(3, ws_VL.max_row, values_only = True), 3):
@@ -368,6 +368,7 @@ for i, row in enumerate(ws_VL.iter_rows(3, ws_VL.max_row, values_only = True), 3
   ws_VL[f'H{i}'].value = f"=SUMIFS('{sheet_stock}'!$Q$3:Q{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5)"
   ws_VL[f'N{i}'].value = f"=SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$Q$3:Q{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$7)"
   ws_VL[f'S{i}'].value = f"=SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$8)"
+  ws_VL[f'T{i}'].value = f"=SUMIFS('{sheet_stock}'!$I$3:I{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$8)"
 
 # VENTA DIRECTA
 for i, row in enumerate(ws_VD.iter_rows(3, ws_VD.max_row, values_only = True), 3):
@@ -420,33 +421,39 @@ i = ws_VL.max_row
 for key, value in dict_stock.items():
   of = value['oficina']
   mat = value['material']
+  key = f'{of}{mat}'
   porcentaje = dict_porcentaje_produccion[of.lower()]
 
   ws_VL.append({
-    1: dict_stock[key]['sector'],
-    2: f'{of}{mat}',
+    1: value['sector'],
+    2: key,
     3: of,
     4: mat,
-    5: dict_stock[key]['descripcion'],
+    5: value['descripcion'],
     6: 0,
     7: 0,
-    8: 0
+    10: value['Puerto oficina'],     # J
+    11: value['Almacen'],            # K
+    18: 0,
   })
   
-  if oficina.lower() in dict_lead_time['optimista']['local']:
+  if of.lower() in dict_lead_time['optimista']['local']:
     i += 1
-    ws[f'I{i}'].value = f"=SUMIFS('{sheet_stock}'!$G$3:G{ETA_maxRow_VL}, '{sheet_stock}'!$E$3:E{ETA_maxRow_VL}, '{sheet_name}'!B{i}, '{sheet_stock}'!$P$3:P{ETA_maxRow_VL}, '{sheet_name}'!$X$5)"
-    ws[f'J{i}'].value = f'=F{i} + H{i} + J{i}'
-    ws[f'K{i}'].value = f'=F{i} + I{i} + J{i}'
-    ws[f'L{i}'].value = f"=SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$Q$3:Q{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$7)"
-    ws[f'M{i}'].value = f"=SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$G$3:G{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$7)"
-    ws[f'N{i}'].value = f'=L{i}'
-    ws[f'O{i}'].value = f'=M{i}' 
-    ws[f'P{i}'].value = dict_asignaciones[key_month_year][llave]['RV final'] or 0
-    ws[f'Q{i}'].value = f"=SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$8)"
-    ws[f'R{i}'].value = f"=SUMIFS('{sheet_stock}'!$I$3:I{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$8)"
-    ws[f'S{i}'].value = f'= {porcentaje} * P{i} + Q{i}'
-    ws[f'T{i}'].value = f'= {porcentaje} * P{i} + R{i}'
+    ws_VL[f'H{i}'].value = f"=SUMIFS('{sheet_stock}'!$Q$3:Q{ETA_maxRow_VL}, '{sheet_stock}'!$E$3:E{ETA_maxRow_VL}, '{sheet_name}'!B{i}, '{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5)"
+    ws_VL[f'I{i}'].value = f"=SUMIFS('{sheet_stock}'!$G$3:G{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$5)"
+    ws_VL[f'L{i}'].value = f'=F{i} + K{i} + H{i}'
+    ws_VL[f'M{i}'].value = f'=F{i} + K{i} + J{i} + I{i}'
+    ws_VL[f'N{i}'].value = f"=SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$Q$3:Q{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$7)"
+    ws_VL[f'O{i}'].value = f"=SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$G$3:G{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$P$3:P{ETA_maxRow_VL},'{sheet_name}'!$X$7)"
+    ws_VL[f'P{i}'].value = f'=N{i}'
+    ws_VL[f'Q{i}'].value = f'=O{i}'
+    ws_VL[f'S{i}'].value = f"=SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$5) + SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow_VL},'{sheet_stock}'!$E$3:E{ETA_maxRow_VL},'{sheet_name}'!B{i},'{sheet_stock}'!$Z$3:Z{ETA_maxRow_VL},'{sheet_name}'!$X$8)"
+    ws_VL[f'U{i}'].value = f'= {porcentaje} * R{i} + S{i}'
+    ws_VL[f'V{i}'].value = f'= {porcentaje} * R{i} + T{i}'
+
+  if month_year in dict_asignaciones:
+    if key in dict_asignaciones:
+      ws_VL[f'R{i}'].value = dict_asignaciones[month_year][key]['RV final'] 
     
   
 print("--- %s 9. ---" % (time.time() - start_time))
