@@ -42,33 +42,34 @@ def stock(ws, dict_lead_time):
   oficina = ''
   i = 4
   for row in ws_dias_stock.iter_rows(5, ws_dias_stock.max_row - 1, values_only=True):
-    if row[2] is None:
+    if row[3] is None:
       break
     
-    if row[0] is not None:
-      sector = row[0]
-    
     if row[1] is not None:
-      oficina = row[1]
+      sector = row[1]
     
-    material = row[2]
-    descripcion = row[3]
+    if row[2] is not None:
+      oficina = row[2]
+    
+    month_year = row[0]
+    material = row[3]
+    descripcion = row[4]
 
-    stock_almacen_lib = row[4] or 0
-    dias_almacen_centro_lib = row[5] or 0
-    dias_almacen_lib = row[6] or 0
+    stock_almacen_lib = row[5] or 0
+    dias_almacen_centro_lib = row[6] or 0
+    dias_almacen_lib = row[7] or 0
 
-    stock_almacen_no_lib = row[7] or 0
-    dias_almacen_centro_no_lib = row[8] or 0
-    dias_almacen_no_lib = row[8] or 0
+    stock_almacen_no_lib = row[8] or 0
+    dias_almacen_centro_no_lib = row[9] or 0
+    dias_almacen_no_lib = row[10] or 0
 
-    stock_oficina_lib = row[13] or 0
-    dias_oficina_centro_lib = row[14] or 0
-    dias_oficina_lib = row[15] or 0
+    stock_oficina_lib = row[14] or 0
+    dias_oficina_centro_lib = row[15] or 0
+    dias_oficina_lib = row[16] or 0
 
-    stock_oficina_no_lib = row[16] or 0
-    dias_oficina_centro_no_lib = row[17] or 0
-    dias_oficina_no_lib = row[11] or 0
+    stock_oficina_no_lib = row[17] or 0
+    dias_oficina_centro_no_lib = row[18] or 0
+    dias_oficina_no_lib = row[19] or 0
 
     llave = f'{oficina.lower()}{material}'
 
