@@ -1,6 +1,6 @@
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.styles.numbers import FORMAT_PERCENTAGE, BUILTIN_FORMATS
+from openpyxl.styles.numbers import BUILTIN_FORMATS
 from constants import *
 
 import time
