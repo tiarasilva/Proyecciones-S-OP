@@ -11,7 +11,7 @@ def run_styles(ws):
   thin = Side(border_style="thin", color=white)
   line_blue = Side(border_style="thin", color=blue)
 
-  for letter in ['J', 'P', 'T']:
+  for letter in ['J', 'Q', 'U']:
     ws[f'{letter}1'].font = Font(bold=True, color=white)
     ws[f'{letter}1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'{letter}1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
@@ -62,22 +62,22 @@ def run_styles(ws):
     # Linea separadora azul
     ws[f'H{i}'].border = Border(left=line_blue)
     ws[f'J{i}'].border = Border(left=line_blue)
-    ws[f'P{i}'].border = Border(left=line_blue)
-    ws[f'T{i}'].border = Border(left=line_blue)
-    ws[f'Y{i}'].border = Border(left=line_blue)
+    ws[f'Q{i}'].border = Border(left=line_blue)
+    ws[f'U{i}'].border = Border(left=line_blue)
+    ws[f'Z{i}'].border = Border(left=line_blue)
 
     # Bold optimista y pesimista
-    ws[f'N{i}'].font = Font(bold=True)
     ws[f'O{i}'].font = Font(bold=True)
-    ws[f'R{i}'].font = Font(bold=True)
+    ws[f'P{i}'].font = Font(bold=True)
     ws[f'S{i}'].font = Font(bold=True)
-    ws[f'W{i}'].font = Font(bold=True)
+    ws[f'T{i}'].font = Font(bold=True)
     ws[f'X{i}'].font = Font(bold=True)
+    ws[f'Y{i}'].font = Font(bold=True)
 
     # Merge 
-    ws.merge_cells('J1:O1')
-    ws.merge_cells('P1:S1')
-    ws.merge_cells('T1:X1')
+    ws.merge_cells('J1:P1')
+    ws.merge_cells('Q1:T1')
+    ws.merge_cells('U1:Y1')
 
 def run_number_format(ws):
   print("--- %s NORMAL 6.1 ---" % (time.time() - start_time))
