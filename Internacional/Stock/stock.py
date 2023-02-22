@@ -6,8 +6,10 @@ import calendar
 from datetime import datetime, date
 import holidays
 
+from os import path
+
 # ----- Creamos el sheet
-def stock(ws, dict_lead_time):
+def stock(ws, dict_lead_time, filename_dias):
   dict_message = {'Puerto Oficina': {}, 'Almacen': {}}
 
   ws.append({

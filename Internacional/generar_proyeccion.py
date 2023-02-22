@@ -3,32 +3,42 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles.numbers import FORMAT_PERCENTAGE, BUILTIN_FORMATS
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-from Stock.stock import stock
+from constants import *
 from ETA.ETA import create_ETA
 from MessageBox.MessageBox import messageBox
-from styles import run_styles, run_number_format
-from constants import *
+from Stock.stock import stock
+from styles import run_styles
 
 import time
 import calendar
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 import holidays
-# from TD.pivotTable import pivot_table
 
-import sys
-import os
+import sys, os
+from os import path
 
 start_time = time.time()
 
 # ----- 0. PATH
-if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-  print('running in a PyInstaller bundle')
-  os.chdir(sys._MEIPASS)
-else:
-  print('running in a normal Python process')
+if getattr(sys, 'frozen', False):
+  print('\nRunning in a PyInstaller bundle\n')
+  bundle_dir = sys._MEIPASS
+  filename_parametros = path.abspath(path.join(path.dirname(__file__), filename_parametros))
+  filename_venta = path.abspath(path.join(path.dirname(__file__), filename_venta))
+  filename_asignaciones = path.abspath(path.join(path.dirname(__file__), filename_asignaciones))
+  filename_chile = path.abspath(path.join(path.dirname(__file__), filename_chile))
+  filename_dias = path.abspath(path.join(path.dirname(__file__), filename_dias))
+  filename_logistica = path.abspath(path.join(path.dirname(__file__), filename_logistica))
+  filename_pedidos_confirmados = path.abspath(path.join(path.dirname(__file__), filename_pedidos_confirmados))
+  filename = path.abspath(path.join(path.dirname(sys.executable), filename))
+  path_img = path.abspath(path.join(path.dirname(__file__), path_img))
 
-# ----- 1. Abrimos el excel de los parametros
+else:
+  print('\nRunning in a Python environment\n')
+  bundle_dir = os.path.dirname(os.path.abspath(__file__))
+
+# # ----- 1. Abrimos el excel de los parametros
 wb_parametros = load_workbook(filename_parametros, data_only = True, read_only = True)
 ws_parametros_time = wb_parametros['Lead time']
 ws_parametros_venta = wb_parametros['Venta']
@@ -217,17 +227,17 @@ wb_venta.close()
 
 # ----- 4. Creamos la sheet Stock - Oficina
 ws_stock_oficina = wb.create_sheet('Stock - Oficina')
-stock(ws_stock_oficina, dict_lead_time)
+stock(ws_stock_oficina, dict_lead_time, filename_dias)
 wb.save(filename)
 
 # ----- 5. Creamos la sheet Stock - Oficina
 print("--- %s 4.ETA inicio ---" % (time.time() - start_time))
 ws_stock_ETA = wb.create_sheet(sheet_stock)
-create_ETA(ws_stock_ETA, dict_lead_time, date_selected_month, dict_cierre_venta, dict_holidays)
+create_ETA(ws_stock_ETA, dict_lead_time, date_selected_month, dict_cierre_venta, dict_holidays, filename_logistica, filename_pedidos_confirmados)
 wb.save(filename)
 ETA_maxRow = ws_stock_ETA.max_row
 
-print("--- %s 5. ETA final---" % (time.time() - start_time))
+print("--- %s 5. ---" % (time.time() - start_time))
 
 # ----- 6. Agregamos Stock Puerto Oficina,	Almacen oficina
 dict_stock = {}
@@ -242,8 +252,6 @@ for row in ws_stock_oficina.iter_rows(4, ws_stock_oficina.max_row, values_only=T
   almacen = row[16] + row[20]
   dict_stock[llave] = { 'sector': sector, 'oficina': oficina, 'material': material, 'descripcion': descripcion, 'Puerto oficina': puerto_oficina, 'Almacen': almacen }
 
-print("--- %s 6. ---" % (time.time() - start_time))
-
 # ----- 7. Asignaciones de venta MES N+2
 wb_asignaciones = load_workbook(filename_asignaciones, read_only=True, data_only=True)
 ws_asignaciones = wb_asignaciones['Asignaciones de venta']
@@ -252,6 +260,7 @@ dict_asignaciones = {}
 month_year = ''
 sector = ''
 office = ''
+
 
 for row in ws_asignaciones.iter_rows(3, ws_asignaciones_max_row - 1, values_only=True):
   if row[0] is not None:
@@ -281,6 +290,7 @@ ws_agua = wb_agua['Stock']
 agua_max = ws_agua.max_row
 dict_agua = {}
 
+i = 4
 for row in ws_agua.iter_rows(4, agua_max, values_only=True):
   month_year = row[0]
   sector = row[1]
@@ -314,6 +324,7 @@ for row in ws_agua.iter_rows(4, agua_max, values_only=True):
         'puerto chile': puerto_chile
       }
     }
+  i += 1
 wb_agua.close()
 
 # ----- 9.
@@ -322,6 +333,7 @@ key_month1_year = f'{month_1.strftime("%m")}.{month_1.year}'
 key_month3_year = f'{month_3.strftime("%m")}.{month_3.year}'
 max_row = ws.max_row
 
+print("--- %s 9.1 ---" % (time.time() - start_time))
 for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   canal_distribucion = row[1]
   llave = row[2]
@@ -359,8 +371,8 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
       LT_pes = lead_time_pes['Puerto']
       LT_opt = lead_time_opt['Puerto']
 
-      pct_prod_pes = (leftover_days - LT_pes) / leftover_days
-      pct_prod_opt = (leftover_days - LT_opt) / leftover_days
+      pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
+      pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
 
       ws[f'L{i}'].value = stock_agua * pct_prod_pes or 0
       ws[f'M{i}'].value = stock_agua * pct_prod_opt or 0
@@ -405,6 +417,55 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   
   ws[f'W{i}'].value = f"=SUMIFS('{sheet_stock}'!$T$3:T{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$8)"
   ws[f'X{i}'].value = f"=SUMIFS('{sheet_stock}'!$J$3:J{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$I$3:I{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$8)"
+
+  # ----- Styles
+  thin = Side(border_style="thin", color=white)
+  line_blue = Side(border_style="thin", color=blue)
+
+  for j in range(8, ws.max_column + 1):
+    ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
+  
+  ws[f'A{i}'].font = Font(bold=False, color=blue)
+  ws[f'B{i}'].font = Font(bold=False, color=blue)
+  ws[f'C{i}'].font = Font(bold=False, color=blue)
+  ws[f'D{i}'].font = Font(bold=False, color=blue)
+  ws[f'E{i}'].font = Font(bold=False, color=blue)
+  ws[f'F{i}'].font = Font(bold=False, color=blue)
+  ws[f'G{i}'].font = Font(bold=False, color=blue)
+  ws[f'A{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'B{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'C{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'D{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'E{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'F{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'G{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'A{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'B{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'C{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'D{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'E{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'F{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'G{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+  # Linea separadora azul
+  ws[f'H{i}'].border = Border(left=line_blue)
+  ws[f'J{i}'].border = Border(left=line_blue)
+  ws[f'R{i}'].border = Border(left=line_blue)
+  ws[f'V{i}'].border = Border(left=line_blue)
+  ws[f'AA{i}'].border = Border(left=line_blue)
+
+  # Bold optimista y pesimista
+  ws[f'P{i}'].font = Font(bold=True)
+  ws[f'Q{i}'].font = Font(bold=True)
+  ws[f'T{i}'].font = Font(bold=True)
+  ws[f'U{i}'].font = Font(bold=True)
+  ws[f'Y{i}'].font = Font(bold=True)
+  ws[f'Z{i}'].font = Font(bold=True)
+
+  # Merge 
+  ws.merge_cells('J1:Q1')
+  ws.merge_cells('R1:U1')
+  ws.merge_cells('V1:Z1')
 
 print("--- %s 10. ---" % (time.time() - start_time))
 # ----- 10. Stock sin Venta ni Plan
@@ -459,13 +520,9 @@ for key, value in dict_stock.items():
   if month_year in dict_asignaciones:
     if key in dict_asignaciones:
       ws[f'V{i}'].value = dict_asignaciones[month_year][key]['RV final'] 
-    
-  
-print("--- %s 11. ---" % (time.time() - start_time))
 
 # ----- 11. Guardar la información
 run_styles(ws)
-run_number_format(ws)
 
 ws['AB5'].value = "SI"
 ws['AB6'].value = f"Mes {month_1.month}"
@@ -476,22 +533,11 @@ ws['AB3'].fill = PatternFill("solid", fgColor=yellow)
 ws['AC3'].value = 'Se suma los pedidos de puerto oficina'
 
 ws['AB4'].fill = PatternFill("solid", fgColor=lightGreen)
+
 ws['AC4'].value = 'Se suma los pedidos que llegan este mes de agua'
 print("--- %s 11. ---" % (time.time() - start_time))
 
 wb.save(filename)
-print(wb.sheetnames)
-print(wb['Rango proyecciones'].max_row)
 wb.close()
-
-# ----- Sheet TD
-# main()
-# pivot_table()
-
-# user_response = input('Desea chequear la proyección?: (Si/No)')
-
-# if user_response in ['Si', 'si', 'SI']:
-#   wb_proy = load_workbook()
-
 print("--- %s seconds ---" % (time.time() - start_time))
-messageBox(dict_lead_time, 'Venta Local')
+# messageBox(dict_lead_time, 'Venta Local', filename_dias, path_img)

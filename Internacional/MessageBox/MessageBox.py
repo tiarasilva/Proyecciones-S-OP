@@ -5,12 +5,12 @@ import tkinter as tk
 from PIL import Image, ImageTk
 from openpyxl import load_workbook
 
-def messageBox(dict_lead_time, selected_tipo_venta):
+def messageBox(dict_lead_time, selected_tipo_venta, filename_dias, path_img):
   app = Tk()
   app.configure(bg='#ffffff')
 
   # Info Image
-  information_image = Image.open("Img/Notice.png")
+  information_image = Image.open(path_img)
   information_image = information_image.resize((50, 50))
   information_image = ImageTk.PhotoImage(information_image)
   logo_label = tk.Label(image = information_image, borderwidth=0, bg = 'white')

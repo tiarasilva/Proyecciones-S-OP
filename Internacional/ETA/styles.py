@@ -55,6 +55,7 @@ def run_styles(ws):
   ws['R1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
   ws['R1'].fill = PatternFill("solid", fgColor=lightBlue)
 
+
 def run_number_format(ws):
   max_row = ws.max_row
   thin = Side(border_style="thin", color=white)
@@ -103,16 +104,16 @@ def run_number_format(ws):
     # ws[f'F{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
     # ws[f'F{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
 
-    ws[f'H{i}'].border = Border(left=line_blue)
-    ws[f'L{i}'].border = Border(left=line_blue)
-    ws[f'R{i}'].border = Border(left=line_blue)
-    ws[f'V{i}'].border = Border(left=line_blue)
-    ws[f'AB{i}'].border = Border(left=line_blue)
+    # ws[f'H{i}'].border = Border(left=line_blue)
+    # ws[f'L{i}'].border = Border(left=line_blue)
+    # ws[f'R{i}'].border = Border(left=line_blue)
+    # ws[f'V{i}'].border = Border(left=line_blue)
+    # ws[f'AB{i}'].border = Border(left=line_blue)
 
-    ws[f'L{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'Q{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'P{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'V{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'Z{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws[f'AA{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    # ws[f'L{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    # ws[f'Q{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    # ws[f'P{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    # ws[f'V{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    # ws[f'Z{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    # ws[f'AA{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
   print("--- %s ETA 6.4 ---" % (time.time() - start_time))
