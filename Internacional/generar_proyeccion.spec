@@ -5,18 +5,6 @@ hiddenimports = []
 hiddenimports += collect_submodules('openpyxl')
 hiddenimports += collect_submodules('holidays')
 
-added_files = [
-    ('Inputs/Parametros.xlsx', './Inputs'),
-    ('Inputs/Puerto Chile.xlsx', 'Inputs'),
-    ('Inputs/Venta - Plan.xlsx', 'Inputs'),
-    ('Inputs/stock.xlsx', 'Inputs'),
-    ('Inputs/ETA/Distribución Internacional - Terrestres.xlsx', 'Inputs/ETA'),
-    ('Inputs/ETA/Distribucion+Logistica - Pedidos AP-Confirmados.xlsx', 'Inputs/ETA'),
-    ('Inputs/ETA/Logística - Pedidos Planta-Puerto-Embarcado.xlsx', 'Inputs/ETA'),
-    ('Inputs/ETA/Planificacion Industrial - Produccion-Plan Congelado.xlsx', 'Inputs/ETA'),
-    ('Inputs/Asignaciones.xlsx', 'Inputs'),
-    ('Img/Notice.png', './Img')
-]
 
 block_cipher = None
 
@@ -25,7 +13,7 @@ a = Analysis(
     ['generar_proyeccion.py'],
     pathex=[],
     binaries=[],
-    datas=added_files,
+    datas=[('Inputs/Parametros.xlsx', 'Inputs'), ('Inputs/Puerto Chile.xlsx', 'Inputs'), ('Inputs/Venta - Plan.xlsx', 'Inputs'), ('Inputs/stock.xlsx', 'Inputs'), ('Inputs/ETA/Distribución Internacional - Terrestres.xlsx', 'Inputs/ETA'), ('Inputs/ETA/Distribucion+Logistica - Pedidos AP-Confirmados.xlsx', 'Inputs/ETA'), ('Inputs/ETA/Logística - Pedidos Planta-Puerto-Embarcado.xlsx', 'Inputs/ETA'), ('Inputs/ETA/Planificacion Industrial - Produccion-Plan Congelado.xlsx', 'Inputs/ETA'), ('Inputs/Asignaciones.xlsx', 'Inputs'), ('Img/Notice.png', 'Img')],
     hiddenimports=hiddenimports,
     hookspath=['.'],
     hooksconfig={},
@@ -45,7 +33,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='generar_proyeccion2',
+    name='generar_proyeccion',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -105,7 +105,14 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
 
   # ----- 3. File Confirmados
   wb_confirmados = load_workbook(filename_pedidos_confirmados, read_only=True, data_only=True)
-  ws_confirmados = wb_confirmados["CONF - AP (zarpe mes n y n+1)"]
+  sheet_name = "CONF - AP (zarpe mes n y n+1) "
+
+  if sheet_name in wb_confirmados.sheetnames:
+    ws_confirmados = wb_confirmados[sheet_name]
+  else:
+    ws_confirmados = wb_confirmados.active
+    print(f'La hoja llamada: {sheet_name} no se encontró, se utilizará la llamada: {wb_confirmados.active}')
+
   ws_confirmados_max = ws_confirmados.max_row
   dict_confirmados = {}
   i = 3

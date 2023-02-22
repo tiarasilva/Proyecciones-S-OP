@@ -1,5 +1,5 @@
 # Run PyInstaller with all data on WINDOWS:
-py -m PyInstaller --collect-submodules=openpyxl --collect-submodules=holidays --additional-hooks-dir=. --add-data "Inputs/Parametros.xlsx;Inputs" --add-data "Inputs/Puerto Chile.xlsx;Inputs" --add-data "Inputs/Venta - Plan.xlsx;Inputs" --add-data "Inputs/stock.xlsx;Inputs" --add-data "Inputs/ETA/Distribución Internacional - Terrestres.xlsx;Inputs/ETA" --add-data "Inputs/ETA/Distribucion+Logistica - Pedidos AP-Confirmados.xlsx;Inputs/ETA" --add-data "Inputs/ETA/Logística - Pedidos Planta-Puerto-Embarcado.xlsx;Inputs/ETA" --add-data "Inputs/ETA/Planificacion Industrial - Produccion-Plan Congelado.xlsx;Inputs/ETA" --add-data "Inputs/Asignaciones.xlsx;Inputs" --add-data "Img/Notice.png;Img" --onefile generar_proyeccion.py
+py -m PyInstaller --collect-submodules=openpyxl --collect-submodules=holidays --additional-hooks-dir=. --add-data "Inputs/Parametros.xlsx;Inputs" --add-data "Inputs/Puerto Chile.xlsx;Inputs" --add-data "Inputs/Venta - Plan.xlsx;Inputs" --add-data "Inputs/stock.xlsx;Inputs" --add-data "Inputs/ETA/Distribución Internacional - Terrestres.xlsx;Inputs/ETA" --add-data "Inputs/ETA/Distribucion+Logistica - Pedidos AP-Confirmados.xlsx;Inputs/ETA" --add-data "Inputs/ETA/Logística - Pedidos Planta-Puerto-Embarcado.xlsx;Inputs/ETA" --add-data "Inputs/ETA/Planificacion Industrial - Produccion-Plan Congelado.xlsx;Inputs/ETA" --add-data "Inputs/Asignaciones.xlsx;Inputs" --add-data "Img/Notice.png;Img" --onefile generar_proyeccion.py
 
 # Run PyInstaller with all data on MAC IOS:
 pyinstaller --collect-submodules=openpyxl --collect-submodules=holidays --additional-hooks-dir=. --add-data Inputs/Parametros.xlsx:Inputs --add-data Inputs/Puerto\ Chile.xlsx:Inputs --add-data Inputs/Venta\ -\ Plan.xlsx:Inputs --add-data Inputs/stock.xlsx:Inputs --add-data Inputs/ETA/Distribución\ Internacional\ -\ Terrestres.xlsx:Inputs/ETA --add-data Inputs/ETA/Distribucion+Logistica\ -\ Pedidos\ AP-Confirmados.xlsx:Inputs/ETA --add-data Inputs/ETA/Logística\ -\ Pedidos\ Planta-Puerto-Embarcado.xlsx:Inputs/ETA --add-data Inputs/ETA/Planificacion\ Industrial\ -\ Produccion-Plan\ Congelado.xlsx:Inputs/ETA --add-data Inputs/Asignaciones.xlsx:Inputs --add-data Img/Notice.png:Img --onefile generar_proyeccion.py
@@ -8,6 +8,9 @@ pyinstaller --collect-submodules=openpyxl --collect-submodules=holidays --additi
 
 # Run spec file on MAC ios
 pyinstaller -i Img/ico.icns generar_proyeccion.spec
+
+# Run spec file on WINDOWS
+py -m PyInstaller generar_proyeccion.spec
 
 ## Install holidays library
 py -m pip install holidays
