@@ -56,22 +56,23 @@ def stock(ws, dict_lead_time, filename_dias):
     month_year = row[0]
     material = row[3]
     descripcion = row[4]
+    nivel_2 = row[5]
 
-    stock_almacen_lib = row[5] or 0
-    dias_almacen_centro_lib = row[6] or 0
-    dias_almacen_lib = row[7] or 0
+    stock_almacen_lib = row[6] or 0
+    dias_almacen_centro_lib = row[7] or 0
+    dias_almacen_lib = row[8] or 0
 
-    stock_almacen_no_lib = row[8] or 0
-    dias_almacen_centro_no_lib = row[9] or 0
-    dias_almacen_no_lib = row[10] or 0
+    stock_almacen_no_lib = row[9] or 0
+    dias_almacen_centro_no_lib = row[10] or 0
+    dias_almacen_no_lib = row[11] or 0
 
-    stock_oficina_lib = row[14] or 0
-    dias_oficina_centro_lib = row[15] or 0
-    dias_oficina_lib = row[16] or 0
+    stock_oficina_lib = row[15] or 0
+    dias_oficina_centro_lib = row[16] or 0
+    dias_oficina_lib = row[17] or 0
 
-    stock_oficina_no_lib = row[17] or 0
-    dias_oficina_centro_no_lib = row[18] or 0
-    dias_oficina_no_lib = row[19] or 0
+    stock_oficina_no_lib = row[18] or 0
+    dias_oficina_centro_no_lib = row[19] or 0
+    dias_oficina_no_lib = row[20] or 0
 
     llave = f'{oficina.lower()}{material}'
 
@@ -80,6 +81,7 @@ def stock(ws, dict_lead_time, filename_dias):
       ws[f'B{i}'].value = oficina
       ws[f'C{i}'].value = int(material)
       ws[f'D{i}'].value = descripcion
+      ws[f'E{i}'].value = nivel_2
       ws[f'F{i}'].value = stock_oficina_lib or 0
       ws[f'G{i}'].value = dias_oficina_centro_lib or 0
       ws[f'H{i}'].value = dias_oficina_lib or 0

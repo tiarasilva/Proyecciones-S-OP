@@ -43,7 +43,7 @@ def run_styles(ws):
   ws.column_dimensions['B'].width = 16
   ws.column_dimensions['C'].width = 10
   ws.column_dimensions['D'].width = 33
-  ws.column_dimensions['E'].width = 10
+  ws.column_dimensions['E'].width = 16
 
   # Tamaño
   ws.row_dimensions[1].height =  25

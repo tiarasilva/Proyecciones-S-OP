@@ -374,6 +374,8 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
       pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
       pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
 
+      # print(i, llave, stock_agua, LT_pes, LT_opt, leftover_days, leftover_days - LT_pes, pct_prod_opt)
+
       ws[f'L{i}'].value = stock_agua * pct_prod_pes or 0
       ws[f'M{i}'].value = stock_agua * pct_prod_opt or 0
   
