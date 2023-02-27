@@ -264,83 +264,109 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
     kilos = ws[f'H{i}'].value
     ws[f'H{i}'].value = ''
 
+    if canal_distribucion == "Venta Directa":
+      if ETA.month == month_1.month:
+        ws[f'H{i}'].value = kilos
+        ws[f'R{i}'].value = kilos
+      elif ETA.month == month_2.month:
+        ws[f'I{i}'].value = kilos
+        ws[f'S{i}'].value = kilos
+      elif ETA.month == month_3.month:
+        ws[f'J{i}'].value = kilos
+        ws[f'T{i}'].value = kilos
+      else:
+        ws[f'K{i}'].value = kilos
+        ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
+        ws[f'U{i}'].value = kilos
+        ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
+
     # ----- OPTIMISTA -----
-    lead_time_opt = dict_lead_time['optimista'][canal_distribucion][oficina.lower()]
-    LT_1 = lead_time_opt['Planta']
-    LT_2 = lead_time_opt['Puerto']
-    tiempo_final_opt = ETA + timedelta(LT_1) + timedelta(LT_2)
-    ws[f'L{i}'].value = LT_1
-    ws[f'M{i}'].value = ETA + timedelta(LT_1)
-    ws[f'N{i}'].value = LT_2
+    if canal_distribucion == "Venta Local":
+      lead_time_opt = dict_lead_time['optimista'][canal_distribucion][oficina.lower()]
+      LT_1 = lead_time_opt['Planta']
+      LT_2 = lead_time_opt['Puerto']
+      tiempo_final_opt = ETA + timedelta(LT_1) + timedelta(LT_2)
+      ws[f'L{i}'].value = LT_1
+      ws[f'M{i}'].value = ETA + timedelta(LT_1)
+      ws[f'N{i}'].value = LT_2
 
-    if canal_distribucion == 'Venta Local':
-      LT_3 = lead_time_opt['Agua']
-      LT_4 = lead_time_opt['Destino']
-      LT_5 = lead_time_opt['Almacen']
-      tiempo_final_opt = ETA + timedelta(LT_4) + timedelta(LT_5)
-      ws[f'L{i}'].value = LT_4
-      ws[f'M{i}'].value = ETA + timedelta(LT_4)
-      ws[f'N{i}'].value = LT_5
+      if canal_distribucion == 'Venta Local':
+        LT_3 = lead_time_opt['Agua']
+        LT_4 = lead_time_opt['Destino']
+        LT_5 = lead_time_opt['Almacen']
+        tiempo_final_opt = ETA + timedelta(LT_4) + timedelta(LT_5)
+        ws[f'L{i}'].value = LT_4
+        ws[f'M{i}'].value = ETA + timedelta(LT_4)
+        ws[f'N{i}'].value = LT_5
+        
+      if tiempo_final_opt.month == month_1.month:
+        ws[f'H{i}'].value = kilos
       
-    if tiempo_final_opt.month == month_1.month:
-      ws[f'H{i}'].value = kilos
-    
-    elif tiempo_final_opt.month == month_2.month:
-      ws[f'I{i}'].value = kilos
-    
-    elif tiempo_final_opt.month == month_3.month:
-      ws[f'J{i}'].value = kilos
-    
-    else:
-      ws[f'K{i}'].value = kilos
-      ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
+      elif tiempo_final_opt.month == month_2.month:
+        ws[f'I{i}'].value = kilos
+      
+      elif tiempo_final_opt.month == month_3.month:
+        ws[f'J{i}'].value = kilos
+      
+      else:
+        ws[f'K{i}'].value = kilos
+        ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
 
-    ws[f'O{i}'].value = tiempo_final_opt
+      ws[f'O{i}'].value = tiempo_final_opt
     
-    # ----- PESIMISTA -----
-    lead_time_pes = dict_lead_time['pesimista'][canal_distribucion][oficina.lower()]
-    LT_1 = lead_time_pes['Planta']
-    LT_2 = lead_time_pes['Puerto']
-    tiempo_final_pes = ETA + timedelta(LT_1) + timedelta(LT_2)
-    ws[f'V{i}'].value = LT_1
-    ws[f'W{i}'].value = ETA + timedelta(LT_1)
-    ws[f'X{i}'].value = LT_2
+      # ----- PESIMISTA -----
+      lead_time_pes = dict_lead_time['pesimista'][canal_distribucion][oficina.lower()]
+      LT_1 = lead_time_pes['Planta']
+      LT_2 = lead_time_pes['Puerto']
+      tiempo_final_pes = ETA + timedelta(LT_1) + timedelta(LT_2)
+      ws[f'V{i}'].value = LT_1
+      ws[f'W{i}'].value = ETA + timedelta(LT_1)
+      ws[f'X{i}'].value = LT_2
 
-    if canal_distribucion == 'Venta Local':
-      LT_3 = lead_time_pes['Agua']
-      LT_4 = lead_time_pes['Destino']
-      LT_5 = lead_time_pes['Almacen']
-      ws[f'V{i}'].value = LT_4
-      ws[f'W{i}'].value = ETA + timedelta(LT_4)
-      ws[f'X{i}'].value = LT_5
+      if canal_distribucion == 'Venta Local':
+        LT_3 = lead_time_pes['Agua']
+        LT_4 = lead_time_pes['Destino']
+        LT_5 = lead_time_pes['Almacen']
+        ws[f'V{i}'].value = LT_4
+        ws[f'W{i}'].value = ETA + timedelta(LT_4)
+        ws[f'X{i}'].value = LT_5
 
-    if tiempo_final_pes.month == month_1.month:
-      ws[f'R{i}'].value = kilos
-    
-    elif tiempo_final_pes.month == month_2.month:
-      ws[f'S{i}'].value = kilos
-    
-    elif tiempo_final_pes.month == month_3.month:
-      ws[f'T{i}'].value = kilos
-    
-    else:
-      ws[f'U{i}'].value = kilos
-      ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
+      if tiempo_final_pes.month == month_1.month:
+        ws[f'R{i}'].value = kilos
+      
+      elif tiempo_final_pes.month == month_2.month:
+        ws[f'S{i}'].value = kilos
+      
+      elif tiempo_final_pes.month == month_3.month:
+        ws[f'T{i}'].value = kilos
+      
+      else:
+        ws[f'U{i}'].value = kilos
+        ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
 
-    ws[f'Y{i}'].value = tiempo_final_pes
+      ws[f'Y{i}'].value = tiempo_final_pes
 
     # ---- Calendario leftover days for month
-    for tiempo_final in [tiempo_final_pes, tiempo_final_opt]:
-      holidays_country = dict_holidays[tiempo_final.year]['chile']
-      if canal_distribucion == 'Venta Local':
-        holidays_country = dict_holidays[tiempo_final.year][oficina.lower()]
-      leftover_days = 0
+      for tiempo_final in [tiempo_final_pes, tiempo_final_opt]:
+        holidays_country = dict_holidays[tiempo_final.year]['chile']
+        if canal_distribucion == 'Venta Local':
+          holidays_country = dict_holidays[tiempo_final.year][oficina.lower()]
+        leftover_days = 0
 
-      if oficina.lower() in dict_leftover_date.keys():
-        if tiempo_final in dict_leftover_date[oficina.lower()]:
-          leftover_days = dict_leftover_date[oficina.lower()][tiempo_final]
+        if oficina.lower() in dict_leftover_date.keys():
+          if tiempo_final in dict_leftover_date[oficina.lower()]:
+            leftover_days = dict_leftover_date[oficina.lower()][tiempo_final]
+
+          else:
+            last_day_month = calendar.monthrange(tiempo_final.year, tiempo_final.month)[1]
+            for day in range(tiempo_final.day + 1, last_day_month + 1):
+              date_day = date(tiempo_final.year, tiempo_final.month, day)
+              if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
+                leftover_days += 1
+            dict_leftover_date[oficina.lower()][tiempo_final] = leftover_days
 
         else:
+          dict_leftover_date[oficina.lower()] = {}
           last_day_month = calendar.monthrange(tiempo_final.year, tiempo_final.month)[1]
           for day in range(tiempo_final.day + 1, last_day_month + 1):
             date_day = date(tiempo_final.year, tiempo_final.month, day)
@@ -348,30 +374,21 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
               leftover_days += 1
           dict_leftover_date[oficina.lower()][tiempo_final] = leftover_days
 
+      leftover_opt = dict_leftover_date[oficina.lower()][tiempo_final_opt]
+      ws[f'P{i}'].value = leftover_opt
+
+      if leftover_opt > dict_cierre_venta[oficina.lower()]:
+        ws[f'Q{i}'].value = 'SI'
       else:
-        dict_leftover_date[oficina.lower()] = {}
-        last_day_month = calendar.monthrange(tiempo_final.year, tiempo_final.month)[1]
-        for day in range(tiempo_final.day + 1, last_day_month + 1):
-          date_day = date(tiempo_final.year, tiempo_final.month, day)
-          if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
-            leftover_days += 1
-        dict_leftover_date[oficina.lower()][tiempo_final] = leftover_days
+        ws[f'Q{i}'].value = f'Mes {tiempo_final_opt.month + 1}'
+      
+      leftover_pes = dict_leftover_date[oficina.lower()][tiempo_final_pes]
+      ws[f'Z{i}'].value = leftover_pes
 
-    leftover_opt = dict_leftover_date[oficina.lower()][tiempo_final_opt]
-    ws[f'P{i}'].value = leftover_opt
-
-    if leftover_opt > dict_cierre_venta[oficina.lower()]:
-      ws[f'Q{i}'].value = 'SI'
-    else:
-      ws[f'Q{i}'].value = f'Mes {tiempo_final_opt.month + 1}'
-    
-    leftover_pes = dict_leftover_date[oficina.lower()][tiempo_final_pes]
-    ws[f'Z{i}'].value = leftover_pes
-
-    if leftover_pes > dict_cierre_venta[oficina.lower()]:
-      ws[f'AA{i}'].value = 'SI'
-    else:
-      ws[f'AA{i}'].value = f'Mes {tiempo_final_pes.month + 1}'
+      if leftover_pes > dict_cierre_venta[oficina.lower()]:
+        ws[f'AA{i}'].value = 'SI'
+      else:
+        ws[f'AA{i}'].value = f'Mes {tiempo_final_pes.month + 1}'
 
   
   print("--- %s ETA 5 ---" % (time.time() - start_time))

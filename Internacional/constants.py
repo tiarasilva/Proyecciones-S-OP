@@ -20,7 +20,9 @@ folder_inputs = "Inputs"
 
 # Sheet names
 sheet_name = 'Rango proyecciones'
-sheet_stock = 'Stock - ETA'
+sheet_name_ETA = 'Stock - ETA'
+sheet_name_PC = 'Stock - Puerto Chile'
+sheet_name_MP = 'Producción faltante'
 
 # Definición de colores
 grey = 'aaabac'
@@ -29,7 +31,7 @@ lightBlue = '8ba9d7'
 lightPale = 'FFDFCC'
 lightOrange = 'f8c9ad'
 orange = 'c14811'
-blue = '22305a'
+blue = '2f5496'
 white = 'ffffff'
 lightRed = 'fec7cd'
 red = 'FF0000'

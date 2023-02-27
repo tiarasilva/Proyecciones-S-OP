@@ -6,6 +6,8 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from constants import *
 from ETA.ETA import create_ETA
 from MessageBox.MessageBox import messageBox
+from PuertoChile.PuertoChile import create_puerto_chile
+# from ProdVenta.MissingProduction import create_missing_production
 from Stock.stock import stock
 from styles import run_styles
 
@@ -150,6 +152,29 @@ for row in ws_porcentaje.iter_rows(2, ws_porcentaje.max_row, values_only=True):
 
 wb_parametros.close()
 
+# LEFTOVER POR OFICINAS
+dict_leftover_country = {
+  'chile': 0,
+  'agro america' : 0,
+  'agro europa' : 0,
+  'agro mexico' : 0,
+  'agrosuper shanghai' : 0,
+  'andes asia' : 0,
+}
+
+for oficina in dict_leftover_country.keys():
+  leftover_days = 0
+  holidays_country = dict_holidays[month_1.year][oficina.lower()]
+
+  if oficina == 'chile':
+    holidays_country = dict_holidays[month_1.year]['chile']
+
+  for day in range(today.day + 1, last_day_month + 1):
+    date_day = date(today.year, number_selected_month, day)
+    if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
+      leftover_days += 1
+  dict_leftover_country[oficina.lower()] = leftover_days
+
 # ----- 2. Creamos el excel de resultados VENTA LOCAL y VENTA DIRECTA
 wb = Workbook()
 ws = wb.active
@@ -157,8 +182,8 @@ ws.title = sheet_name
 
 ws.append({
   10: f'Proyección {name_month_1} {month_1.year}',
-  18: f'Proyección {name_month_2} {month_2.year}',
-  22: f'Proyección {name_month_3} {month_3.year}'
+  22: f'Proyección {name_month_2} {month_2.year}',
+  28: f'Proyección {name_month_3} {month_3.year}'
 })
 
 ws.append({
@@ -172,22 +197,33 @@ ws.append({
   8: 'Venta Actual',          # H
   9: 'Plan',                  # I
   10: 'ETA Pesimista',        # J
-  11: 'ETA Optimista',        # K
+  11: 'Plan - Prod. actual',  # K
   12: 'Puerto Chile Pes.',    # L
-  13: 'Puerto Chile Opt.',    # M
-  14: 'Puerto Oficina',       # N
-  15: 'Almacen oficina',      # O
-  16: 'Pesimista Proy.',      # P
-  17: 'Optimista Proy.',      # Q
-  18: 'ETA Pesimista',        # R
-  19: 'ETA Optimista',        # S
-  20: 'Pesimista Proy.2',     # T
-  21: 'Optimista Proy.2',     # U
-  22: 'Asignación de venta',  # V
-  23: 'ETA Pesimista',        # W
-  24: 'ETA Optimista',        # X
-  25: 'Pesimista Proy.3',     # Y
-  26: 'Optimista Proy.3'      # Z
+  13: 'Puerto Oficina',       # M
+  14: 'Almacen oficina',      # N
+  15: 'Pesimista Proy.',      # O
+
+  16: 'ETA Optimista',        # P
+  17: 'Plan - Prod. actual',  # Q
+  18: 'Puerto Chile Opt.',    # R
+  19: 'Puerto Oficina',       # S
+  20: 'Almacen oficina',      # T
+  21: 'Optimista Proy.',      # U
+
+  22: 'ETA Pesimista',        # V
+  23: 'Inventario mes N',     # W
+  24: 'Pesimista Proy. N+1',  # X
+
+  25: 'ETA Optimista',        # Y
+  26: 'Inventario mes N',     # Z
+  27: 'Optimista Proy. N+1',  # AA
+
+  28: 'Asignación de venta',  # AB
+  29: 'ETA Pesimista',        # AC
+  30: 'Pesimista Proy. N+2',  # AD
+  
+  31: 'ETA Optimista',        # AE
+  32: 'Optimista Proy. N+3'   # AF
 })
 
 # ----- 3. Leemos Venta actual
@@ -230,16 +266,24 @@ ws_stock_oficina = wb.create_sheet('Stock - Oficina')
 stock(ws_stock_oficina, dict_lead_time, filename_dias)
 wb.save(filename)
 
-# ----- 5. Creamos la sheet Stock - Oficina
+# ----- 5. Creamos la sheet Stock - ETA
 print("--- %s 4.ETA inicio ---" % (time.time() - start_time))
-ws_stock_ETA = wb.create_sheet(sheet_stock)
+ws_stock_ETA = wb.create_sheet(sheet_name_ETA)
 create_ETA(ws_stock_ETA, dict_lead_time, date_selected_month, dict_cierre_venta, dict_holidays, filename_logistica, filename_pedidos_confirmados)
 wb.save(filename)
 ETA_maxRow = ws_stock_ETA.max_row
 
 print("--- %s 5. ---" % (time.time() - start_time))
 
-# ----- 6. Agregamos Stock Puerto Oficina,	Almacen oficina
+# ----- 6. Creamos la sheet Producción Faltante
+# print("--- %s 6.ETA inicio ---" % (time.time() - start_time))
+# ws_missing_prod = wb.create_sheet(sheet_name_MP)
+# create_missing_production(ws_missing_prod, dict_leftover_country)
+# wb.save(filename)
+
+# print("--- %s 7. ---" % (time.time() - start_time))
+
+# ----- 7. Agregamos Stock Puerto Oficina,	Almacen oficina
 dict_stock = {}
 
 for row in ws_stock_oficina.iter_rows(4, ws_stock_oficina.max_row, values_only=True):
@@ -252,7 +296,7 @@ for row in ws_stock_oficina.iter_rows(4, ws_stock_oficina.max_row, values_only=T
   almacen = row[16] + row[20]
   dict_stock[llave] = { 'sector': sector, 'oficina': oficina, 'material': material, 'descripcion': descripcion, 'Puerto oficina': puerto_oficina, 'Almacen': almacen }
 
-# ----- 7. Asignaciones de venta MES N+2
+# ----- 8. Asignaciones de venta MES N+2
 wb_asignaciones = load_workbook(filename_asignaciones, read_only=True, data_only=True)
 ws_asignaciones = wb_asignaciones['Asignaciones de venta']
 ws_asignaciones_max_row = ws_asignaciones.max_row
@@ -260,7 +304,6 @@ dict_asignaciones = {}
 month_year = ''
 sector = ''
 office = ''
-
 
 for row in ws_asignaciones.iter_rows(3, ws_asignaciones_max_row - 1, values_only=True):
   if row[0] is not None:
@@ -284,7 +327,12 @@ for row in ws_asignaciones.iter_rows(3, ws_asignaciones_max_row - 1, values_only
     dict_asignaciones[month_year] = { key: { 'sector': sector, 'oficina': oficina, 'material': material,'descripcion': description, 'RV final': RV_final }}
 wb_asignaciones.close()
 
-# ----- 8. Stock Centro Agua
+# ----- 9. Creamos la sheet Stock - Puerto Chile
+# ws_puerto_chile = wb.create_sheet(sheet_name_PC)
+# create_puerto_chile(ws_puerto_chile, filename_chile, dict_lead_time, dict_holidays, month_1, dict_leftover_country)
+# wb.save(filename)
+# PC_max_row = ws_puerto_chile.max_row
+
 wb_agua = load_workbook(filename_chile, read_only=True, data_only=True)
 ws_agua = wb_agua['Stock']
 agua_max = ws_agua.max_row
@@ -328,7 +376,6 @@ for row in ws_agua.iter_rows(4, agua_max, values_only=True):
 wb_agua.close()
 
 # ----- 9.
-dict_leftover_country = {}
 key_month1_year = f'{month_1.strftime("%m")}.{month_1.year}'
 key_month3_year = f'{month_3.strftime("%m")}.{month_3.year}'
 max_row = ws.max_row
@@ -345,80 +392,93 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
 
   if canal_distribucion == 'Venta Directa':
     last_stop_LT = round(lead_time_opt['Puerto'], 2)
-    holidays_country = dict_holidays[month_1.year]['chile']
+    leftover_days = dict_leftover_country['chile']
   else:
     last_stop_LT = round(lead_time_opt['Destino'], 2)
-    holidays_country = dict_holidays[month_1.year][oficina.lower()]
-  
-   # -- 9.1. Feriados
-  leftover_days = 0
-  if oficina in dict_leftover_country:
     leftover_days = dict_leftover_country[oficina.lower()]
-  else:
-    for day in range(today.day + 1, last_day_month + 1):
-      date_day = date(today.year, number_selected_month, day)
-      if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
-        leftover_days += 1
-    dict_leftover_country[oficina.lower()] = leftover_days
+
+  # -- 9.1. Plan - Prod. actual
+  LT_opt_puerto = lead_time_opt['Puerto']
+  LT_pes_puerto = lead_time_pes['Puerto']
+
+  ws[f'K{i}'].value = f"=(I{i} - H{i}) * MAX(({leftover_days} - {LT_pes_puerto})/({LT_pes_puerto}), 0)"
+  ws[f'Q{i}'].value = f"=(I{i} - H{i}) * MAX(({leftover_days} - {LT_opt_puerto})/({LT_opt_puerto}), 0)"
     
-  # -- 9.2. Centro agua mes 1
+  # -- 9.2.PUERTO CHILE mes 1
+  # ws[f'L{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$K$2:K{PC_max_row})"
+  # ws[f'R{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$N$2:N{PC_max_row})"
   if key_month1_year in dict_agua:
-    ws[f'L{i}'].value = 0
-    ws[f'M{i}'].value = 0
     if llave in dict_agua[key_month1_year]:
-      stock_agua = dict_agua[key_month1_year][llave]['puerto chile'] or 0
+      ws[f'L{i}'].value = dict_agua[key_month1_year][llave]['puerto chile'] or 0
+      ws[f'R{i}'].value = dict_agua[key_month1_year][llave]['puerto chile'] or 0
       dict_agua[key_month1_year].pop(llave)
-      LT_pes = lead_time_pes['Puerto']
-      LT_opt = lead_time_opt['Puerto']
-
-      pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
-      pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
-
-      # print(i, llave, stock_agua, LT_pes, LT_opt, leftover_days, leftover_days - LT_pes, pct_prod_opt)
-
-      ws[f'L{i}'].value = stock_agua * pct_prod_pes or 0
-      ws[f'M{i}'].value = stock_agua * pct_prod_opt or 0
   
   # -- 9.3. Asignaciones mes 3
   if key_month3_year in dict_asignaciones:
     if llave in dict_asignaciones[key_month3_year]:
-      ws[f'V{i}'].value = dict_asignaciones[key_month3_year][llave]['RV final']
+      ws[f'AB{i}'].value = dict_asignaciones[key_month3_year][llave]['RV final'] or 0
       dict_asignaciones[key_month3_year].pop(llave)
   
-  # -- 9.4. Stock Puerto Oficina y Almacen
-  if canal_distribucion == 'Venta Local':
-    if llave in dict_stock:
-      ws[f'N{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
-      ws[f'O{i}'].value = dict_stock[llave]['Almacen'] or 0
-      dict_stock.pop(llave, None)
-  
-  # -- 9.5. MES N
-  ws[f'P{i}'].value = f'=H{i} + O{i} + J{i}'                    # PESIMISTA --> Venta Actual + Almacen oficina + ETA Pesimista n
-  ws[f'Q{i}'].value = f'=H{i} + O{i} + K{i}'                    # OPTIMISTA --> Venta Actual + Almacen oficina + ETA Optimista n
-  ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
-
-  if leftover_days >= last_stop_LT:
-    ws[f'Q{i}'].value = f'=H{i} + O{i} + K{i} + N{i}'           # OPTIMISTA --> + Puerto Oficina
-    ws[f'Q{i}'].fill = PatternFill("solid", fgColor=lightGreen)
-  
   # -- 9.6. MES N + 1
-  ws[f'T{i}'].value = f'=R{i}'                                  # PESIMISTA --> + ETA Pesimista n+1
-  ws[f'U{i}'].value = f'=S{i}'                                  # OPTIMISTA --> + ETA Optimista n+1
+  ws[f'X{i}'].value = f'=V{i} + W{i}'                             # PESIMISTA --> + ETA Pesimista n+1 + Inventario N
+  ws[f'AA{i}'].value = f'=Y{i} + Z{i}'                            # OPTIMISTA --> + ETA Optimista n+1 + Inventario N
+  ws[f'X{i}'].fill = PatternFill("solid", fgColor=yellow)
+  ws[f'AA{i}'].fill = PatternFill("solid", fgColor=yellow)
 
   # -- 9.7. MES N + 2
   porcentaje = dict_porcentaje_produccion[oficina.lower()]
-  ws[f'Y{i}'].value = f'= {porcentaje} * V{i} + W{i}'           # PESIMISTA --> Asignación de venta + ETA Pesimista n+2
-  ws[f'Z{i}'].value = f'= {porcentaje} * V{i} + X{i}'           # OPTIMISTA --> Asignación de venta + ETA Optimista n+2
+  ws[f'AD{i}'].value = f'= {porcentaje} * AB{i} + AC{i}'           # PESIMISTA --> Asignación de venta + ETA Pesimista n+2
+  ws[f'AF{i}'].value = f'= {porcentaje} * AB{i} + AE{i}'           # OPTIMISTA --> Asignación de venta + ETA Optimista n+2
+  ws[f'AD{i}'].fill = PatternFill("solid", fgColor=yellow)
+  ws[f'AF{i}'].fill = PatternFill("solid", fgColor=yellow)
   
-  # ----- Stock planta	Puerto Chile	Centro Agua
-  ws[f'J{i}'].value = f"=SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$5)"
-  ws[f'K{i}'].value = f"=SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$5)"
+  # VENTA LOCAL
+  if canal_distribucion == "Venta Local":
+    # -- ETA: Stock planta	Puerto Chile	Centro Agua
+    ws[f'J{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$R$3:R{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$5)"
+    ws[f'P{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$H$3:H{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$5)"
 
-  ws[f'R{i}'].value = f"=SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$7)"
-  ws[f'S{i}'].value = f"=SUMIFS('{sheet_stock}'!$I$3:I{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$7)"
+    ws[f'V{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$S$3:S{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$R$3:R{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$7)"
+    ws[f'Y{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$I$3:I{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$H$3:H{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$7)"
+    
+    ws[f'AC{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$T$3:T{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$S$3:S{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$8)"
+    ws[f'AE{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$J$3:J{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$I$3:I{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$8)"
+
+    # -- Stock Puerto Oficina y Almacen
+    if llave in dict_stock:
+      ws[f'M{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
+      ws[f'N{i}'].value = dict_stock[llave]['Almacen'] or 0
+
+      ws[f'S{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
+      ws[f'T{i}'].value = dict_stock[llave]['Almacen'] or 0
+      dict_stock.pop(llave, None)
+
+    # -- Proyecciones mes N
+    ws[f'O{i}'].value = f'=H{i} + N{i} + J{i}'                    # PESIMISTA --> Venta Actual + Almacen oficina + ETA Pesimista n
+    ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
+    ws[f'U{i}'].value = f'=H{i} + T{i} + P{i}'                    # OPTIMISTA --> Venta Actual + Almacen oficina + ETA Optimista n
+    ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
+    
+    if leftover_days >= last_stop_LT:
+      ws[f'U{i}'].value = f'=H{i} + T{i} + S{i} + P{i}'           # OPTIMISTA --> + Puerto Oficina
+      ws[f'U{i}'].fill = PatternFill("solid", fgColor=lightGreen)
   
-  ws[f'W{i}'].value = f"=SUMIFS('{sheet_stock}'!$T$3:T{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$8)"
-  ws[f'X{i}'].value = f"=SUMIFS('{sheet_stock}'!$J$3:J{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$I$3:I{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$8)"
+  # VENTA DIRECTA
+  elif canal_distribucion == "Venta Directa": # VENTA EN PUERTO CHILE 
+    ws[f'J{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$R$3:R{ETA_maxRow})"
+    ws[f'P{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$H$3:H{ETA_maxRow})"
+
+    ws[f'V{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$S$3:S{ETA_maxRow})"
+    ws[f'Y{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$I$3:I{ETA_maxRow})"
+
+    ws[f'AC{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$T$3:T{ETA_maxRow})"
+    ws[f'AE{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$J$3:J{ETA_maxRow})"
+
+    # -- Proyecciones mes N
+    ws[f'O{i}'].value = f'=H{i} + J{i} + K{i} + L{i}'                    # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. - (Plan - Prod. actual)
+    ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
+    ws[f'U{i}'].value = f'=H{i} + P{i} + Q{i} + R{i}'                    # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt.
+    ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
 
   # ----- Styles
   thin = Side(border_style="thin", color=white)
@@ -452,22 +512,22 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   # Linea separadora azul
   ws[f'H{i}'].border = Border(left=line_blue)
   ws[f'J{i}'].border = Border(left=line_blue)
-  ws[f'R{i}'].border = Border(left=line_blue)
   ws[f'V{i}'].border = Border(left=line_blue)
-  ws[f'AA{i}'].border = Border(left=line_blue)
+  ws[f'AB{i}'].border = Border(left=line_blue)
+  ws[f'AG{i}'].border = Border(left=line_blue)
 
   # Bold optimista y pesimista
-  ws[f'P{i}'].font = Font(bold=True)
-  ws[f'Q{i}'].font = Font(bold=True)
-  ws[f'T{i}'].font = Font(bold=True)
+  ws[f'O{i}'].font = Font(bold=True)
   ws[f'U{i}'].font = Font(bold=True)
-  ws[f'Y{i}'].font = Font(bold=True)
-  ws[f'Z{i}'].font = Font(bold=True)
+  ws[f'X{i}'].font = Font(bold=True)
+  ws[f'AA{i}'].font = Font(bold=True)
+  ws[f'AD{i}'].font = Font(bold=True)
+  ws[f'AF{i}'].font = Font(bold=True)
 
   # Merge 
-  ws.merge_cells('J1:Q1')
-  ws.merge_cells('R1:U1')
-  ws.merge_cells('V1:Z1')
+  ws.merge_cells('J1:U1')
+  ws.merge_cells('V1:AA1')
+  ws.merge_cells('AB1:AF1')
 
 print("--- %s 10. ---" % (time.time() - start_time))
 # ----- 10. Stock sin Venta ni Plan
@@ -494,49 +554,66 @@ for key, value in dict_stock.items():
     7: '',
     8: 0,
     9: 0,
-    13: value['Puerto oficina'],     # 
-    14: value['Almacen'],            # 
-    21: 0,
+    13: value['Puerto oficina'] or 0,     # 
+    14: value['Almacen'] or 0,            # 
+    19: value['Puerto oficina'] or 0,     # 
+    20: value['Almacen'] or 0,            # 
   })
   
   if of.lower() in dict_lead_time['optimista']['Venta Local']:
     i += 1
-    ws[f'J{i}'].value = f"=SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$5)"
-    ws[f'K{i}'].value = f"=SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$5)"
+    # -- ETA: Stock planta	Puerto Chile	Centro Agua
+    ws[f'J{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$R$3:R{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$5)"
+    ws[f'P{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$H$3:H{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$5)"
 
-    ws[f'R{i}'].value = f"=SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$R$3:R{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$7)"
-    ws[f'S{i}'].value = f"=SUMIFS('{sheet_stock}'!$I$3:I{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$H$3:H{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$7)"
+    ws[f'V{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$S$3:S{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$R$3:R{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$7)"
+    ws[f'Y{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$I$3:I{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$H$3:H{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$7)"
     
-    ws[f'W{i}'].value = f"=SUMIFS('{sheet_stock}'!$T$3:T{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$S$3:S{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AB$8)"
-    ws[f'X{i}'].value = f"=SUMIFS('{sheet_stock}'!$J$3:J{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$5) + SUMIFS('{sheet_stock}'!$I$3:I{ETA_maxRow},'{sheet_stock}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_stock}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AB$8)"
+    ws[f'AC{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$T$3:T{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$S$3:S{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AH$8)"
+    ws[f'AE{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$J$3:J{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$5) + SUMIFS('{sheet_name_ETA}'!$I$3:I{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AH$8)"
 
-    ws[f'P{i}'].value = f'=H{i} + O{i} + J{i}'
-    ws[f'Q{i}'].value = f'=H{i} + O{i} + K{i}'
+    # -- Stock Puerto Oficina y Almacen
+    if llave in dict_stock:
+      ws[f'M{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
+      ws[f'N{i}'].value = dict_stock[llave]['Almacen'] or 0
 
-    ws[f'T{i}'].value = f'=R{i}'
-    ws[f'U{i}'].value = f'=S{i}'
+      ws[f'S{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
+      ws[f'T{i}'].value = dict_stock[llave]['Almacen'] or 0
+      dict_stock.pop(llave, None)
 
-    ws[f'Y{i}'].value = f'= {porcentaje} * V{i} + W{i}'
-    ws[f'Z{i}'].value = f'= {porcentaje} * V{i} + X{i}'
+    # -- Proyecciones mes N
+    ws[f'O{i}'].value = f'=H{i} + N{i} + J{i}'                    # PESIMISTA --> Venta Actual + Almacen oficina + ETA Pesimista n
+    ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
+    ws[f'U{i}'].value = f'=H{i} + T{i} + P{i}'                    # OPTIMISTA --> Venta Actual + Almacen oficina + ETA Optimista n
+    ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
+    
+    # -- Proyecciones mes N + 1
+    ws[f'X{i}'].value = f'=V{i} + W{i}'                             # PESIMISTA --> + ETA Pesimista n+1 + Inventario N
+    ws[f'AA{i}'].value = f'=Y{i} + Z{i}'                            # OPTIMISTA --> + ETA Optimista n+1 + Inventario N
+
+    # -- Proyecciones mes N + 2
+    porcentaje = dict_porcentaje_produccion[oficina.lower()]
+    ws[f'AD{i}'].value = f'= {porcentaje} * AB{i} + AC{i}'           # PESIMISTA --> Asignación de venta + ETA Pesimista n+2
+    ws[f'AF{i}'].value = f'= {porcentaje} * AB{i} + AE{i}'           # OPTIMISTA --> Asignación de venta + ETA Optimista n+2
 
   if month_year in dict_asignaciones:
     if key in dict_asignaciones:
-      ws[f'V{i}'].value = dict_asignaciones[month_year][key]['RV final'] 
+      ws[f'AB{i}'].value = dict_asignaciones[month_year][key]['RV final'] 
 
 # ----- 11. Guardar la información
 run_styles(ws)
 
-ws['AB5'].value = "SI"
-ws['AB6'].value = f"Mes {month_1.month}"
-ws['AB7'].value = f"Mes {month_2.month}"
-ws['AB8'].value = f"Mes {month_3.month}"
+ws['AH5'].value = "SI"
+ws['AH6'].value = f"Mes {month_1.month}"
+ws['AH7'].value = f"Mes {month_2.month}"
+ws['AH8'].value = f"Mes {month_3.month}"
 
-ws['AB3'].fill = PatternFill("solid", fgColor=yellow)
-ws['AC3'].value = 'Se suma los pedidos de puerto oficina'
+ws['AH3'].fill = PatternFill("solid", fgColor=yellow)
+ws['AI3'].value = 'Se suma los pedidos de puerto oficina'
 
-ws['AB4'].fill = PatternFill("solid", fgColor=lightGreen)
+ws['AH4'].fill = PatternFill("solid", fgColor=lightGreen)
 
-ws['AC4'].value = 'Se suma los pedidos que llegan este mes de agua'
+ws['AI4'].value = 'Se suma los pedidos que llegan este mes de agua'
 print("--- %s 11. ---" % (time.time() - start_time))
 
 wb.save(filename)
