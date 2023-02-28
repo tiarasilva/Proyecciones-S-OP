@@ -1,14 +1,15 @@
 # Nombre de los archivos
 filename = 'Rango proyecciones.xlsx'
+filename_asignaciones = 'Inputs/Asignaciones.xlsx'
+filename_chile = 'Inputs/Puerto Chile.xlsx'
 filename_VD = 'Rango proyecciones - VD.xlsx'
 filename_VL = 'Rango proyecciones - VL.xlsx'
-filename_chile = 'Inputs/Puerto Chile.xlsx'
 filename_parametros = 'Inputs/Parametros.xlsx'
 filename_venta = 'Inputs/Venta - Plan.xlsx'
 filename_dias = 'Inputs/stock.xlsx'
 filename_ETA = 'Inputs/ETA - Febrero.xlsx'
-filename_asignaciones = 'Inputs/Asignaciones.xlsx'
 filename_prod_faltante = 'Inputs/Produccion faltante.xlsx'
+filename_RV = 'Inputs/RV final.xlsx'
 path_img = "Img/Notice.png"
 
 # BuildETA filenames
