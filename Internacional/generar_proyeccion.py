@@ -175,6 +175,16 @@ for oficina in dict_leftover_country.keys():
       leftover_days += 1
   dict_leftover_country[oficina.lower()] = leftover_days
 
+# PRODUCTIVE DAYS IN CHILE
+productive_days = 0
+holidays_country = dict_holidays[month_1.year]['chile']
+
+for day in range(1, last_day_month + 1):
+  date_day = date(today.year, number_selected_month, day)
+  if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
+    productive_days +=1
+
+
 # ----- 2. Creamos el excel de resultados VENTA LOCAL y VENTA DIRECTA
 wb = Workbook()
 ws = wb.active
@@ -201,29 +211,29 @@ ws.append({
   12: 'Puerto Chile Pes.',    # L
   13: 'Puerto Oficina',       # M
   14: 'Almacen oficina',      # N
-  15: 'Pesimista Proy.',      # O
+  15: 'Proy. Pesimista',      # O
 
   16: 'ETA Optimista',        # P
   17: 'Plan - Prod. actual',  # Q
   18: 'Puerto Chile Opt.',    # R
   19: 'Puerto Oficina',       # S
   20: 'Almacen oficina',      # T
-  21: 'Optimista Proy.',      # U
+  21: 'Proy. Optimista',      # U
 
-  22: 'ETA Pesimista',        # V
+  22: 'ETA Pesimista N+1',    # V
   23: 'Inventario mes N',     # W
-  24: 'Pesimista Proy. N+1',  # X
+  24: f'Proy. Pesimista {name_month_2}',  # X
 
-  25: 'ETA Optimista',        # Y
+  25: 'ETA Optimista N+1',    # Y
   26: 'Inventario mes N',     # Z
-  27: 'Optimista Proy. N+1',  # AA
+  27: f'Proy. Optimista {name_month_2}',  # AA
 
   28: 'Asignación de venta',  # AB
-  29: 'ETA Pesimista',        # AC
-  30: 'Pesimista Proy. N+2',  # AD
+  29: 'ETA Pesimista N+2',    # AC
+  30: f'Proy. Pesimista {name_month_3}',  # AD
   
-  31: 'ETA Optimista',        # AE
-  32: 'Optimista Proy. N+3'   # AF
+  31: 'ETA Optimista N+2',    # AE
+  32: f'Proy. Optimista {name_month_3}'   # AF
 })
 
 # ----- 3. Leemos Venta actual
@@ -328,10 +338,10 @@ for row in ws_asignaciones.iter_rows(3, ws_asignaciones_max_row - 1, values_only
 wb_asignaciones.close()
 
 # ----- 9. Creamos la sheet Stock - Puerto Chile
-# ws_puerto_chile = wb.create_sheet(sheet_name_PC)
-# create_puerto_chile(ws_puerto_chile, filename_chile, dict_lead_time, dict_holidays, month_1, dict_leftover_country)
-# wb.save(filename)
-# PC_max_row = ws_puerto_chile.max_row
+ws_puerto_chile = wb.create_sheet(sheet_name_PC)
+create_puerto_chile(ws_puerto_chile, filename_chile, dict_lead_time, dict_holidays, month_1, dict_leftover_country)
+wb.save(filename)
+PC_max_row = ws_puerto_chile.max_row
 
 wb_agua = load_workbook(filename_chile, read_only=True, data_only=True)
 ws_agua = wb_agua['Stock']
@@ -405,12 +415,11 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   ws[f'Q{i}'].value = f"=(I{i} - H{i}) * MAX(({leftover_days} - {LT_opt_puerto})/({LT_opt_puerto}), 0)"
     
   # -- 9.2.PUERTO CHILE mes 1
-  # ws[f'L{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$K$2:K{PC_max_row})"
-  # ws[f'R{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$N$2:N{PC_max_row})"
   if key_month1_year in dict_agua:
     if llave in dict_agua[key_month1_year]:
-      ws[f'L{i}'].value = dict_agua[key_month1_year][llave]['puerto chile'] or 0
-      ws[f'R{i}'].value = dict_agua[key_month1_year][llave]['puerto chile'] or 0
+      volumen_puerto_chile = dict_agua[key_month1_year][llave]['puerto chile'] or 0
+      ws[f'L{i}'].value = f"={volumen_puerto_chile} * ({leftover_days}/{productive_days})" or 0
+      ws[f'R{i}'].value = f"={volumen_puerto_chile} * ({leftover_days}/{productive_days})" or 0
       dict_agua[key_month1_year].pop(llave)
   
   # -- 9.3. Asignaciones mes 3
@@ -420,6 +429,10 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
       dict_asignaciones[key_month3_year].pop(llave)
   
   # -- 9.6. MES N + 1
+  # + ETAS
+  # + inventario --> Proy mes N - Stock
+  # - Ventas
+  # Producción
   ws[f'X{i}'].value = f'=V{i} + W{i}'                             # PESIMISTA --> + ETA Pesimista n+1 + Inventario N
   ws[f'AA{i}'].value = f'=Y{i} + Z{i}'                            # OPTIMISTA --> + ETA Optimista n+1 + Inventario N
   ws[f'X{i}'].fill = PatternFill("solid", fgColor=yellow)
@@ -446,11 +459,13 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
 
     # -- Stock Puerto Oficina y Almacen
     if llave in dict_stock:
-      ws[f'M{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
-      ws[f'N{i}'].value = dict_stock[llave]['Almacen'] or 0
+      stock_puerto_oficina = dict_stock[llave]['Puerto oficina'] or 0
+      stock_almacen = dict_stock[llave]['Almacen'] or 0
+      ws[f'M{i}'].value = f"={stock_puerto_oficina} * ({leftover_days} / {productive_days})"
+      ws[f'N{i}'].value = f"={stock_almacen} * ({leftover_days} / {productive_days})"
 
-      ws[f'S{i}'].value = dict_stock[llave]['Puerto oficina'] or 0
-      ws[f'T{i}'].value = dict_stock[llave]['Almacen'] or 0
+      ws[f'S{i}'].value = f"={stock_puerto_oficina} * ({leftover_days} / {productive_days})"
+      ws[f'T{i}'].value = f"={stock_almacen} * ({leftover_days} / {productive_days})"
       dict_stock.pop(llave, None)
 
     # -- Proyecciones mes N
