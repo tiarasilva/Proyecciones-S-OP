@@ -11,7 +11,7 @@ def run_styles(ws):
   thin = Side(border_style="thin", color=white)
   line_blue = Side(border_style="thin", color=blue)
 
-  for letter in ['J', 'V', 'AB']:
+  for letter in ['L', 'X', 'AD']:
     ws[f'{letter}1'].font = Font(bold=True, color=white)
     ws[f'{letter}1'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws[f'{letter}1'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
@@ -23,15 +23,15 @@ def run_styles(ws):
     ws[f'{get_column_letter(i)}2'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
     ws[f'{get_column_letter(i)}2'].fill = PatternFill("solid", fgColor=lightBlue)
 
-  ws['O2'].fill = PatternFill("solid", fgColor=blue)
-  ws['U2'].fill = PatternFill("solid", fgColor=blue)
-  ws['X2'].fill = PatternFill("solid", fgColor=blue)
-  ws['AA2'].fill = PatternFill("solid", fgColor=blue)
-  ws['AD2'].fill = PatternFill("solid", fgColor=blue)
+  ws['Q2'].fill = PatternFill("solid", fgColor=blue)
+  ws['W2'].fill = PatternFill("solid", fgColor=blue)
+  ws['Z2'].fill = PatternFill("solid", fgColor=blue)
+  ws['AC2'].fill = PatternFill("solid", fgColor=blue)
   ws['AF2'].fill = PatternFill("solid", fgColor=blue)
+  ws['AH2'].fill = PatternFill("solid", fgColor=blue)
 
   # Tamaños
-  ws.column_dimensions['C'].width = 11
+  ws.column_dimensions['B'].width = 11
   ws.column_dimensions['C'].width = 23
   ws.column_dimensions['D'].width = 16
   ws.column_dimensions['F'].width = 32

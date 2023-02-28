@@ -1,27 +1,30 @@
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.styles.numbers import BUILTIN_FORMATS
+from openpyxl.styles.numbers import BUILTIN_FORMATS, FORMAT_PERCENTAGE
 from datetime import datetime, date
 import calendar
 from constants import *
 from openpyxl.utils import get_column_letter
 
-def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month_1, dict_leftover_country):
+def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month_1, dict_leftover_country, productive_days):
+  name_month_1 = month_translate_EN_CL[month_1.strftime('%B').lower()]
+  today = datetime.now().date()
+
   ws.append({
-    1: 'Fecha',
-    2: 'Sector',
-    3: 'Oficina',
-    4: 'Material',
-    5: 'Descripción',
-    6: 'Nivel 2',
-    7: 'Llave',
+    1: 'Fecha',               # A
+    2: 'Sector',              # B
+    3: 'Oficina',             # C
+    4: 'Material',            # D
+    5: 'Descripción',         # E
+    6: 'Nivel 2',             # F
+    7: 'Llave',               # G
     8: 'Puerto Chile',
-    9: 'Días productivos faltantes',
-    10: 'Días productivos mensual',
-    11: 'Porcentaje productivo',
-    12: 'Stock vendible',
+    9: f'Días productivos desde\n{today}',
+    10: f'Días productivos mensual {name_month_1}',
+    11: 'Porcentaje prod. Pes.',
+    12: 'Stock vendible Pes.',
     13: 'Porcentaje prod Opt.',
-    14: 'Stock * Porc Opt.'
+    14: 'Stock vendible Opt.'
   })
 
   thin = Side(border_style="thin", color=white)
@@ -82,9 +85,9 @@ def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month
     ws[f'G{i}'].value = key
     ws[f'H{i}'].value = puerto_chile
     ws[f'I{i}'].value = leftover_days
-    ws[f'J{i}'].value = pct_prod_pes
-    ws[f'K{i}'].value = f"=J{i} * H{i}"
-    ws[f'L{i}'].value = LT_opt
+    ws[f'J{i}'].value = productive_days
+    ws[f'K{i}'].value = pct_prod_pes
+    ws[f'L{i}'].value = f"=J{i} * K{i}"
     ws[f'M{i}'].value = pct_prod_opt
     ws[f'N{i}'].value = f"=M{i} * H{i}"
 
@@ -128,10 +131,14 @@ def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month
     ws.column_dimensions['F'].width = 18
     ws.column_dimensions['G'].width = 23
     ws.column_dimensions['H'].width = 10
+    ws.column_dimensions['I'].width = 13
     ws.column_dimensions['J'].width = 10
+    ws.column_dimensions['K'].width = 10
     ws.column_dimensions['M'].width = 10
 
     # Styles
     ws[f'H{i}'].number_format = BUILTIN_FORMATS[3]
+    ws[f'K{i}'].number_format = FORMAT_PERCENTAGE
+    ws[f'M{i}'].number_format = FORMAT_PERCENTAGE
     i += 1
 
