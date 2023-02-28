@@ -66,8 +66,12 @@ def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month
     last_day_month = calendar.monthrange(today.year, today.month)[1]
 
     # Porcentaje producción
-    pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
-    pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
+    if leftover_days > 0:
+      pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
+      pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
+    
+    pct_prod_opt = 0
+    pct_prod_pes = 0
 
     ws[f'A{i}'].value = month_year
     ws[f'B{i}'].value = sector
