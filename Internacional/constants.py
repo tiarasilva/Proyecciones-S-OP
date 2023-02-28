@@ -8,7 +8,7 @@ filename_venta = 'Inputs/Venta - Plan.xlsx'
 filename_dias = 'Inputs/stock.xlsx'
 filename_ETA = 'Inputs/ETA - Febrero.xlsx'
 filename_asignaciones = 'Inputs/Asignaciones.xlsx'
-filename_proyeccion = 'Inputs/Proyecciones de Venta - Sem 04.xlsx'
+filename_prod_faltante = 'Inputs/Producción faltante.xlsx'
 path_img = "Img/Notice.png"
 
 # BuildETA filenames
