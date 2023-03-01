@@ -38,7 +38,7 @@ def run_styles(ws):
   ws.column_dimensions['G'].width = 16
 
   for i in range(8, ws.max_column + 1):
-    ws.column_dimensions[f'{get_column_letter(i)}'].width = 11
+    ws.column_dimensions[f'{get_column_letter(i)}'].width = 10
 
   # Tamaño
   ws.row_dimensions[1].height =  25

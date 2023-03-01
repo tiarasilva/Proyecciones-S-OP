@@ -16,6 +16,7 @@ import calendar
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 import holidays
+from dateutil import rrule
 
 import sys, os
 from os import path
@@ -63,9 +64,12 @@ selected_year = ws_parametros_venta['B1'].value
 selected_month = ws_parametros_venta['B2'].value
 selected_week = ws_parametros_venta['B3'].value
 number_selected_month = month_number[selected_month.lower()]
-today = datetime.now()
-date_selected_month = date(int(selected_year), number_selected_month, 1)
+today = datetime.now().date()
+
+last_day_selected_month = calendar.monthrange(selected_year, number_selected_month)[1]
+date_selected_month = date(int(selected_year), number_selected_month, last_day_selected_month)
 last_day_month = calendar.monthrange(today.year, today.month)[1]
+
 
 # Nombre fechas
 month_1 = date_selected_month
@@ -164,28 +168,33 @@ dict_leftover_country = {
   'andes asia' : 0,
 }
 
-for oficina in dict_leftover_country.keys():
-  leftover_days = 0
-  holidays_country = dict_holidays[month_1.year][oficina.lower()]
 
-  if oficina == 'chile':
-    holidays_country = dict_holidays[month_1.year]['chile']
+# LEFTOVERDAYS BY SELECTED MONTH AND YEAR 
+if today > month_1:
+  print(f'La fecha seleccionada {name_month_1} {month_1.year} ya pasó el mes actual')
 
-  for day in range(today.day + 1, last_day_month + 1):
-    date_day = date(today.year, number_selected_month, day)
-    if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
-      leftover_days += 1
-  dict_leftover_country[oficina.lower()] = leftover_days
+else:
+  print(f'La fecha seleccionada es {name_month_1} {month_1.year}')
+  for oficina in dict_leftover_country.keys():
+    leftover_days = 0
+    holidays_country = dict_holidays[month_1.year][oficina.lower()]
 
-# PRODUCTIVE DAYS IN CHILE
+    for day in rrule.rrule(rrule.DAILY, dtstart=today, until=month_1):
+      day = day.date()
+      if day not in holidays_country and day.strftime('%A') != 'Sunday':
+        leftover_days += 1
+    dict_leftover_country[oficina.lower()] = leftover_days
+
+# PRODUCTIVE DAYS IN CHILE until selected date
 productive_days = 0
 holidays_country = dict_holidays[month_1.year]['chile']
+start_date = date(today.year, today.month, 1)
 
-for day in range(1, last_day_month + 1):
-  date_day = date(today.year, number_selected_month, day)
-  if date_day not in holidays_country and date_day.strftime('%A') != 'Sunday':
-    productive_days +=1
+for day in rrule.rrule(rrule.DAILY, dtstart=start_date, until=month_1):
+  if day not in holidays_country and day.strftime('%A') != 'Sunday':
+    productive_days += 1
 
+print(f'Días productivos totales desde el inicio de mes {start_date} hasta {month_1} son {productive_days}')
 
 # ----- 2. Creamos el excel de resultados VENTA LOCAL y VENTA DIRECTA
 wb = Workbook()
@@ -253,7 +262,6 @@ for row in ws_venta.iter_rows(3, ws_venta.max_row, values_only=True):
   nivel_2 = row[6]
   venta_total = row[7]
   plan_total = row[8]
-
   canal_distribucion = 'Venta Directa'
   
   if oficina is not None:
@@ -298,10 +306,11 @@ for row in ws_stock_oficina.iter_rows(4, ws_stock_oficina.max_row, values_only=T
   oficina = row[1]
   material = row[2]
   descripcion = row[3]
+  nivel_2 = row[4]
   llave = f'{oficina.lower()}{material}'
   puerto_oficina = row[8] + row[12]
   almacen = row[16] + row[20]
-  dict_stock[llave] = { 'sector': sector, 'oficina': oficina, 'material': material, 'descripcion': descripcion, 'Puerto oficina': puerto_oficina, 'Almacen': almacen }
+  dict_stock[llave] = { 'sector': sector, 'oficina': oficina, 'material': material, 'descripcion': descripcion, 'nivel_2': nivel_2, 'Puerto oficina': puerto_oficina, 'Almacen': almacen }
 
 # ----- 7. Producción faltante
 wb_prod_faltante = load_workbook(filename_prod_faltante, read_only=True, data_only=True)
@@ -434,11 +443,10 @@ for row in ws_agua.iter_rows(4, agua_max, values_only=True):
   i += 1
 wb_agua.close()
 
-# ----- 11.
-key_month3_year = f'{month_3.strftime("%m")}.{month_3.year}'
+# ----- 11. STOCK CON VENTA Y PLAN
 max_row = ws.max_row
 
-print("--- %s 11.1 ---" % (time.time() - start_time))
+print("--- %s 11. ---" % (time.time() - start_time))
 for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   canal_distribucion = row[1]
   llave = row[2]
@@ -462,14 +470,14 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
       ws[f'J{i}'].value = dict_prod_faltante[selected_month1_year][material]['KG_plan']
       ws[f'K{i}'].value = dict_prod_faltante[selected_month1_year][material]['KG_real']
 
-  # -- 9.1. Plan - Prod. actual
+  # -- 11.2. Plan - Prod. actual
   LT_opt_puerto = lead_time_opt['Puerto']
   LT_pes_puerto = lead_time_pes['Puerto']
 
   ws[f'L{i}'].value = f"=MAX(J{i} - K{i}, 0) * MAX(({leftover_days} - {LT_pes_puerto})/({LT_pes_puerto}), 0)"
   ws[f'R{i}'].value = f"=MAX(J{i} - K{i}, 0) * MAX(({leftover_days} - {LT_opt_puerto})/({LT_opt_puerto}), 0)"
     
-  # -- 9.2.PUERTO CHILE mes 1
+  # -- 11.3.PUERTO CHILE mes 1
   # if selected_month1_year in dict_agua:
   #   if llave in dict_agua[selected_month1_year]:
   #     volumen_puerto_chile = dict_agua[selected_month1_year][llave]['puerto chile'] or 0
@@ -480,19 +488,21 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   ws[f'N{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$L$2:L{PC_max_row})"
   ws[f'T{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$N$2:N{PC_max_row})"
   
-  # -- 9.3. Asignaciones mes 3
-  if key_month3_year in dict_asignaciones:
-    if llave in dict_asignaciones[key_month3_year]:
-      ws[f'AD{i}'].value = dict_asignaciones[key_month3_year][llave]['RV final'] or 0
-      dict_asignaciones[key_month3_year].pop(llave)
+  # -- 11.4. Asignaciones mes 3
+  if selected_month3_year in dict_asignaciones:
+    if llave in dict_asignaciones[selected_month3_year]:
+      ws[f'AD{i}'].value = dict_asignaciones[selected_month3_year][llave]['RV final'] or 0
+      dict_asignaciones[selected_month3_year].pop(llave)
 
-  # -- 9.6. MES N + 1
+  # -- 11.5. MES N + 1
   # + ETAS
   # + inventario --> Proy mes N - Stock
   # - Ventas
   # Producción
   # -- Proyecciones mes N + 1
+  print(i, llave)
   if llave in dict_RV[selected_month2_year]:
+    print('entre', selected_month2_year, llave)
     ws[f'X{i}'].value = dict_RV[selected_month2_year][llave]['RV_final_prod']          # Producción N + 1
     ws[f'Y{i}'].value = dict_RV[selected_month2_year][llave]['RV_final_venta']         # Venta N + 1
 
@@ -501,7 +511,7 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   ws[f'AA{i}'].fill = PatternFill("solid", fgColor=yellow)
   ws[f'AC{i}'].fill = PatternFill("solid", fgColor=yellow)
 
-  # -- 9.7. MES N + 2
+  # -- 11.6. MES N + 2
   porcentaje = dict_porcentaje_produccion[oficina.lower()]
   ws[f'AF{i}'].value = f'= {porcentaje} * AD{i} + AE{i}'                               # PESIMISTA --> Asignación de venta + ETA Pesimista n+2
   ws[f'AH{i}'].value = f'= {porcentaje} * AD{i} + AG{i}'                               # OPTIMISTA --> Asignación de venta + ETA Optimista n+2
@@ -602,20 +612,20 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
   ws[f'AF{i}'].font = Font(bold=True)
   ws[f'AH{i}'].font = Font(bold=True)
 
-  # Merge 
-  ws.merge_cells('L1:W1')
-  ws.merge_cells('X1:AC1')
-  ws.merge_cells('AD1:AH1')
+# Merge 
+ws.merge_cells('L1:W1')
+ws.merge_cells('X1:AC1')
+ws.merge_cells('AD1:AH1')
+
 
 print("--- %s 10. ---" % (time.time() - start_time))
-# ----- 10. Stock sin Venta ni Plan
-i = ws.max_row
+# ----- 10. STOCK SIN VENTA NI PLAN
+for i, (key, value) in enumerate(dict_stock.copy().items(), ws.max_row + 1):
+  oficina = value['oficina']
+  material = value['material']
+  llave = f'{oficina.lower()}{material}'
 
-for key, value in dict_stock.items():
-  of = value['oficina']
-  mat = value['material']
-  key = f'{of}{mat}'
-  porcentaje = dict_porcentaje_produccion[of.lower()]
+  porcentaje = dict_porcentaje_produccion[oficina.lower()]
   lead_time_opt = dict_lead_time['optimista'][canal_distribucion][oficina.lower()]
   lead_time_pes = dict_lead_time['pesimista'][canal_distribucion][oficina.lower()]
 
@@ -623,33 +633,76 @@ for key, value in dict_stock.items():
   leftover_days = dict_leftover_country['chile']
   last_stop_LT = round(lead_time_opt['Puerto'], 2)
   
-  if of.lower() in dict_lead_time['optimista']['Venta Local'].keys():
+  if oficina.lower() in dict_lead_time['optimista']['Venta Local'].keys():
     canal_distribucion = 'Venta Local'
     leftover_days = dict_leftover_country[oficina.lower()]
     last_stop_LT = round(lead_time_opt['Destino'], 2)
 
-  prod_fat = dict_prod_faltante[selected_month1_year].get(mat, {})
+  prod_fat = dict_prod_faltante[selected_month1_year].get(material, {})
   ws.append({
-    1: value['sector'],
-    2: canal_distribucion,
-    3: key,
-    4: of,
-    5: mat,
-    6: value['descripcion'],
-    7: '',
-    8: 0,
-    9: 0,
-    10: prod_fat.get('KG_plan', 0),
-    11: prod_fat.get('KG_real', 0),
+    1: value['sector'],               # A
+    2: canal_distribucion,            # B
+    3: llave,                         # C
+    4: oficina,                       # D
+    5: material,                      # E
+    6: value['descripcion'],          # F
+    7: value['nivel_2'],              # G
+    8: 0,                             # H
+    9: 0,                             # I
+    10: prod_fat.get('KG_plan', 0),   # J
+    11: prod_fat.get('KG_real', 0),   # K
     
-    13: value['Puerto oficina'] or 0,
-    14: value['Almacen'] or 0,
-    19: value['Puerto oficina'] or 0,
-    20: value['Almacen'] or 0, 
+    15: value['Puerto oficina'] or 0, # O
+    16: value['Almacen'] or 0,        # P
+    21: value['Puerto oficina'] or 0, # U
+    22: value['Almacen'] or 0,        # V
   })
+
+  # -- 11.1. Prod Faltante
+  if selected_month1_year in dict_prod_faltante:
+    if int(material) in dict_prod_faltante[selected_month1_year]:
+      ws[f'J{i}'].value = dict_prod_faltante[selected_month1_year][material]['KG_plan']
+      ws[f'K{i}'].value = dict_prod_faltante[selected_month1_year][material]['KG_real']
   
-  if of.lower() in dict_lead_time['optimista']['Venta Local']:
-    i += 1
+  # -- 11.2. Plan - Prod. actual
+  LT_opt_puerto = lead_time_opt['Puerto']
+  LT_pes_puerto = lead_time_pes['Puerto']
+
+  ws[f'L{i}'].value = f"=MAX(J{i} - K{i}, 0) * MAX(({leftover_days} - {LT_pes_puerto})/({LT_pes_puerto}), 0)"
+  ws[f'R{i}'].value = f"=MAX(J{i} - K{i}, 0) * MAX(({leftover_days} - {LT_opt_puerto})/({LT_opt_puerto}), 0)"
+  
+  # -- 11.3.PUERTO CHILE mes 1
+  ws[f'N{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$L$2:L{PC_max_row})"
+  ws[f'T{i}'].value = f"=SUMIF('{sheet_name_PC}'!$G$2:G{PC_max_row},'{sheet_name}'!C{i},'{sheet_name_PC}'!$N$2:N{PC_max_row})"
+  
+  # -- 11.4. Asignaciones mes 3
+  if selected_month3_year in dict_asignaciones:
+    print('entre')
+    if llave in dict_asignaciones[selected_month3_year]:
+      ws[f'AD{i}'].value = dict_asignaciones[selected_month3_year][llave]['RV final'] or 0
+      dict_asignaciones[selected_month3_year].pop(llave)
+  else:
+    print(f'No se encuentra la fecha {selected_month3_year} en archivo {filename_asignaciones}')
+  
+  # -- 11.5. MES N + 1
+  if llave in dict_RV[selected_month2_year]:
+    ws[f'X{i}'].value = dict_RV[selected_month2_year][llave]['RV_final_prod']          # Producción N + 1
+    ws[f'Y{i}'].value = dict_RV[selected_month2_year][llave]['RV_final_venta']         # Venta N + 1
+
+  ws[f'AA{i}'].value = f'=Z{i} + X{i}'                                          # PESIMISTA --> + ETA Pesimista n+1 + Producción N + 1
+  ws[f'AC{i}'].value = f'=AB{i} + X{i}'                                         # OPTIMISTA --> + ETA Optimista n+1 + Producción N + 1
+  ws[f'AA{i}'].fill = PatternFill("solid", fgColor=yellow)
+  ws[f'AC{i}'].fill = PatternFill("solid", fgColor=yellow)
+
+  # -- 11.6. MES N + 2
+  porcentaje = dict_porcentaje_produccion[oficina.lower()]
+  ws[f'AF{i}'].value = f'= {porcentaje} * AD{i} + AE{i}'                               # PESIMISTA --> Asignación de venta + ETA Pesimista n+2
+  ws[f'AH{i}'].value = f'= {porcentaje} * AD{i} + AG{i}'                               # OPTIMISTA --> Asignación de venta + ETA Optimista n+2
+  ws[f'AF{i}'].fill = PatternFill("solid", fgColor=yellow)
+  ws[f'AH{i}'].fill = PatternFill("solid", fgColor=yellow)
+
+  # VENTA LOCAL
+  if canal_distribucion == "Venta Local":
     # -- ETA: Stock planta	Puerto Chile	Centro Agua
     ws[f'M{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$R$3:R{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$AA$3:AA{ETA_maxRow},'{sheet_name}'!$AJ$5)"
     ws[f'S{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$H$3:H{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AJ$5)"
@@ -669,6 +722,7 @@ for key, value in dict_stock.items():
 
       ws[f'U{i}'].value = f"={stock_puerto_oficina} * ({leftover_days} / {productive_days})"
       ws[f'V{i}'].value = f"={stock_almacen} * ({leftover_days} / {productive_days})"
+      dict_stock.pop(llave, None)
 
     # -- Proyecciones mes N
     ws[f'Q{i}'].value = f'=H{i} + P{i} + M{i}'                                         # PESIMISTA --> Venta Actual + Almacen oficina + ETA Pesimista n
@@ -679,28 +733,67 @@ for key, value in dict_stock.items():
     if leftover_days >= last_stop_LT:
       ws[f'W{i}'].value = f'=H{i} + V{i} + S{i} + U{i}'                                # OPTIMISTA --> + Puerto Oficina
       ws[f'W{i}'].fill = PatternFill("solid", fgColor=lightGreen)
-      dict_stock.pop(llave, None)
-    
-    # -- Proyecciones mes N + 1
-    if key in dict_RV[selected_month2_year]:
-      ws[f'X{i}'].value = dict_RV[selected_month2_year][key]['RV_final_prod']     # Producción N + 1
-      ws[f'Y{i}'].value = dict_RV[selected_month2_year][key]['RV_final_venta']    # Venta N + 1
+  
+  # VENTA DIRECTA
+  elif canal_distribucion == "Venta Directa":                                          # VENTA EN PUERTO CHILE 
+    ws[f'M{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$R$3:R{ETA_maxRow})"
+    ws[f'S{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$H$3:H{ETA_maxRow})"
 
-    ws[f'AA{i}'].value = f'=Z{i} + X{i}'                                               # PESIMISTA --> + ETA Pesimista n+1 + Inventario N
-    ws[f'AC{i}'].value = f'=AA{i} + X{i}'                                              # OPTIMISTA --> + ETA Optimista n+1 + Inventario N
-    ws[f'AA{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'AC{i}'].fill = PatternFill("solid", fgColor=yellow)
+    ws[f'Z{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$S$3:S{ETA_maxRow})"
+    ws[f'AB{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$I$3:I{ETA_maxRow})"
 
-    # -- Proyecciones mes N + 2
-    porcentaje = dict_porcentaje_produccion[oficina.lower()]
-    ws[f'AF{i}'].value = f'= {porcentaje} * AD{i} + AE{i}'                             # PESIMISTA --> Asignación de venta + ETA Pesimista n+2
-    ws[f'AH{i}'].value = f'= {porcentaje} * AD{i} + AG{i}'                             # OPTIMISTA --> Asignación de venta + ETA Optimista n+2
-    ws[f'AF{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'AH{i}'].fill = PatternFill("solid", fgColor=yellow)
+    ws[f'AE{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$T$3:T{ETA_maxRow})"
+    ws[f'AG{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$J$3:J{ETA_maxRow})"
 
-  if month_year in dict_asignaciones:
-    if key in dict_asignaciones:
-      ws[f'AD{i}'].value = dict_asignaciones[month_year][key]['RV final'] 
+    # -- Proyecciones mes N
+    ws[f'Q{i}'].value = f'=H{i} + M{i} + N{i} + L{i}'                                  # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
+    ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
+    ws[f'W{i}'].value = f'=H{i} + S{i} + R{i} + T{i}'                                  # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
+    ws[f'W{i}'].fill = PatternFill("solid", fgColor=yellow)
+  
+  # STYLES 
+  thin = Side(border_style="thin", color=white)
+  line_blue = Side(border_style="thin", color=blue)
+
+  for j in range(8, ws.max_column + 1):
+    ws[f'{get_column_letter(j)}{i}'].number_format = BUILTIN_FORMATS[3]
+
+  ws[f'A{i}'].font = Font(bold=False, color=blue)
+  ws[f'B{i}'].font = Font(bold=False, color=blue)
+  ws[f'C{i}'].font = Font(bold=False, color=blue)
+  ws[f'D{i}'].font = Font(bold=False, color=blue)
+  ws[f'E{i}'].font = Font(bold=False, color=blue)
+  ws[f'F{i}'].font = Font(bold=False, color=blue)
+  ws[f'G{i}'].font = Font(bold=False, color=blue)
+  ws[f'A{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'B{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'C{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'D{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'E{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'F{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'G{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+  ws[f'A{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'B{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'C{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'D{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'E{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'F{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  ws[f'G{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+  # Linea separadora azul
+  ws[f'H{i}'].border = Border(left=line_blue)
+  ws[f'L{i}'].border = Border(left=line_blue)
+  ws[f'X{i}'].border = Border(left=line_blue)
+  ws[f'AD{i}'].border = Border(left=line_blue)
+  ws[f'AI{i}'].border = Border(left=line_blue)
+
+  # Bold optimista y pesimista
+  ws[f'Q{i}'].font = Font(bold=True)
+  ws[f'W{i}'].font = Font(bold=True)
+  ws[f'Z{i}'].font = Font(bold=True)
+  ws[f'AC{i}'].font = Font(bold=True)
+  ws[f'AF{i}'].font = Font(bold=True)
+  ws[f'AH{i}'].font = Font(bold=True)
 
 # ----- 11. Guardar la información
 run_styles(ws)

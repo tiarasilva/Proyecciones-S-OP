@@ -19,7 +19,7 @@ def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month
     6: 'Nivel 2',             # F
     7: 'Llave',               # G
     8: 'Puerto Chile',
-    9: f'Días productivos desde\n{today}',
+    9: f'Días productivos desde\n{today} hasta\n {month_1}',
     10: f'Días productivos mensual {name_month_1}',
     11: 'Porcentaje prod. Pes.',
     12: 'Stock vendible Pes.',
@@ -69,12 +69,12 @@ def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month
     last_day_month = calendar.monthrange(today.year, today.month)[1]
 
     # Porcentaje producción
+    pct_prod_opt = 0
+    pct_prod_pes = 0
+
     if leftover_days > 0:
       pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
       pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
-    
-    pct_prod_opt = 0
-    pct_prod_pes = 0
 
     ws[f'A{i}'].value = month_year
     ws[f'B{i}'].value = sector
@@ -87,7 +87,7 @@ def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month
     ws[f'I{i}'].value = leftover_days
     ws[f'J{i}'].value = productive_days
     ws[f'K{i}'].value = pct_prod_pes
-    ws[f'L{i}'].value = f"=J{i} * K{i}"
+    ws[f'L{i}'].value = f"=K{i} * H{i}"
     ws[f'M{i}'].value = pct_prod_opt
     ws[f'N{i}'].value = f"=M{i} * H{i}"
 
@@ -134,11 +134,15 @@ def create_puerto_chile(ws, filename_chile, dict_lead_time, dict_holidays, month
     ws.column_dimensions['I'].width = 13
     ws.column_dimensions['J'].width = 10
     ws.column_dimensions['K'].width = 10
+    ws.column_dimensions['L'].width = 10
     ws.column_dimensions['M'].width = 10
+    ws.column_dimensions['N'].width = 10
 
     # Styles
     ws[f'H{i}'].number_format = BUILTIN_FORMATS[3]
     ws[f'K{i}'].number_format = FORMAT_PERCENTAGE
+    ws[f'L{i}'].number_format = BUILTIN_FORMATS[3]
     ws[f'M{i}'].number_format = FORMAT_PERCENTAGE
+    ws[f'N{i}'].number_format = BUILTIN_FORMATS[3]
     i += 1
 
