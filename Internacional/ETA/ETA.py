@@ -12,7 +12,7 @@ start_time = time.time()
 def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_holidays, filename_logistica, filename_pedidos_confirmados):
   # DATA
   ws.append({
-    # 6: f'=SUBTOTALES(9;Tabla14[Mes {selected_month}])'
+    # 6: f'=SUBTOTAL(9;Tabla14[Mes {selected_month}])'
     8: 'OPTIMISTA',
     18: 'PESIMISTA',
   })
@@ -26,6 +26,12 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
   name_month_2 = month_translate_EN_CL[month_2.strftime('%B').lower()]
   name_month_3 = month_translate_EN_CL[month_3.strftime('%B').lower()]
   name_month_4 = month_translate_EN_CL[month_4.strftime('%B').lower()]
+
+  selected_month1_year = f'{month_1.strftime("%m")}.{month_1.year}'
+  selected_month2_year = f'{month_2.strftime("%m")}.{month_2.year}'
+  selected_month3_year = f'{month_3.strftime("%m")}.{month_3.year}'
+  selected_month4_year = f'{month_4.strftime("%m")}.{month_4.year}'
+
 
   ws.append({
     1: 'Sector',                          # A
@@ -57,66 +63,20 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
     27: 'Considerar OPT',                 # AA
   })
 
-  # ----- 1. File Planificiación Industrial - NO USO
-  # print("--- %s ETA 5.0  ---" % (time.time() - start_time))
-  # wb_PI = load_workbook(f"Inputs/ETA/{filename_PI}", read_only=True, data_only=True)
-  # ws_PI = wb_PI['Consolidado']
-  # dict_PI = {}
-
-  # print("--- %s ETA 5.1  ---" % (time.time() - start_time))
-  # ws_PI_max = ws_PI.max_row
-  # for row in ws_PI.iter_rows(2, ws_PI_max, values_only=True):
-  #   centro_productivo = row[1]
-  #   material = row[2]
-  #   kilos = row[3]
-  #   fecha_disp = row[6]
-  # wb_PI.close()
-
-  # ----- 2. File Distribución II - NO USO
-  # print("--- %s ETA 5.1.1  ---" % (time.time() - start_time))
-  # wb_distr = load_workbook(f"Inputs/ETA/{filename_distribucion_II}", read_only=True, data_only=True)
-  # ws_distr = wb_distr['Terrestres']
-  # ws_distr_max = ws_distr.max_row
-  
-  # i = 2
-  # print("--- %s ETA 5.2  ---" % (time.time() - start_time))
-  # for row in ws_distr.iter_rows(2, ws_distr_max, values_only=True):
-  #   if row[0] is None:
-  #     break
-  #   oficina = row[0]
-  #   pedido = int(row[1])
-  #   transporte_terrestre = int(row[2])
-  #   material = int(row[3])
-  #   descripcion = row[4] #
-  #   cantidad_pedida = row[5]
-  #   UM = row[6]
-  #   estado = row[7]
-  #   fecha_programa = row[8]
-  #   fecha_despacho = row[9] # Es ETD o Fec- Real D (N) o Ini- Stack (O), F Conf Logista, Fecha Programa
-  #   fecha_factura = row[10] #
-  #   sector = row[11]
-  #   pais_destino = row[12]
-  #   puerto_destino = row[13]
-  #   cod_solicitante = row[14] #
-  #   nombre_solicitante = row[15]
-  #   incoterm = row[16]  # Es INCO?
-  #   nivel_1 = row[17]
-  # wb_distr.close()
-
   # ----- 3. File Confirmados
   wb_confirmados = load_workbook(filename_pedidos_confirmados, read_only=True, data_only=True)
   sheet_name = "CONF - AP (zarpe mes n y n+1) "
+  dict_confirmados = {}
 
   if sheet_name in wb_confirmados.sheetnames:
     ws_confirmados = wb_confirmados[sheet_name]
   else:
     ws_confirmados = wb_confirmados.active
-    print(f'La hoja llamada: {sheet_name} no se encontró, se utilizará la llamada: {wb_confirmados.active}')
-
+    print(f'En archivo {filename_pedidos_confirmados} no se encontró la hoja: "{sheet_name}", se utilizará la llamada: {wb_confirmados.active}')
+  
   ws_confirmados_max = ws_confirmados.max_row
-  dict_confirmados = {}
-  i = 3
 
+  i = 3
   print("--- %s ETA 5.3  ---" % (time.time() - start_time))
   for row in ws_confirmados.iter_rows(3, ws_confirmados_max, values_only=True):
     if row[0] is None:
@@ -147,14 +107,14 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
     key = f"{oficina.lower()}{pedido}{material}"
 
     if key in dict_confirmados:
-      print(f"Repetidoo {oficina}, pedido: {pedido}, material: {material}\n")
+      print(f"Repetido Confirmados {oficina}, pedido: {pedido}, material: {material}\n")
     
     else:
       dict_confirmados[key] = {
         'oficina': oficina,
+        'tipo_venta': tipo_venta,
         'sector': sector,
         'pedido': pedido,
-        'tipo venta': tipo_venta,
         'material': material,
         'descripcion': descripcion,
         'nivel 2': nivel_2,
@@ -187,7 +147,7 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
   ws_logistica = wb_logistica['Pedidos Planta-Puerto-Embarcado']
   ws_logistica_max = ws_logistica.max_row
   dict_logistica = {}
-  j = ws.max_row
+  j = ws.max_row + 1
 
   print("--- %s ETA 5.4  ---" % (time.time() - start_time))
   for row in ws_logistica.iter_rows(2, ws_logistica_max, values_only=True):
@@ -212,12 +172,21 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
     if oficina.lower() in dict_lead_time['optimista']['Venta Local']:
       canal_distribucion = 'Venta Local'
 
-    if key in dict_confirmados:
+    if key in dict_confirmados.keys():
+      # !!!!! QUE HAGO CON LOS REPETIDOS!!! ---> Se borra el AP Confirmados
       print(f"Repetido Confirmados con Logistica {oficina}, pedido: {pedido}, material: {material}")
+      dict_confirmados.pop(key)
 
     else:
+      if key in dict_logistica.keys():
+        if ETA != dict_logistica[key]['ETA']:
+          print(f"Repetido Logistica {oficina}, pedido: {pedido}, material: {material}")
+        else:
+          dict_logistica[key]['kilos'] += kilos
+          kilos = dict_logistica[key]['kilos']
+
       if ETA and type(ETA) != str:
-        ws[f'A{j}'].value = dict_sector_numero[int(sector)]
+        # ws[f'A{j}'].value = dict_sector_numero[int(sector)]
         ws[f'B{j}'].value = canal_distribucion
         ws[f'C{j}'].value = pedido
         ws[f'D{j}'].value = oficina
@@ -226,23 +195,14 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
         ws[f'G{j}'].value = datetime.date(ETA)
         ws[f'H{j}'].value = kilos
         j += 1
-    
-      # !!!!! QUE HAGO CON LOS REPETIDOS!!! ---> Se borra el AP Confirmados
-      if key in dict_logistica:
-        if ETA != dict_logistica[key]['ETA']:
-          print(f"Repetido Logistica {oficina}, pedido: {pedido}, material: {material}")
-        else:
-          dict_logistica[key]['kilos'] += kilos
-          ws[f'H{j}'].value = dict_logistica[key]['kilos']
-    
-      else:
+  
         dict_logistica[key] = {
           'oficina': oficina,
           'tipo_venta': tipo_venta,
+          'sector': '',
           'pedido': pedido,
           'status_pedido': status_pedido,
           'material': material,
-          'nave': nave,
           'pto_destino': pto_destino,
           'fecha_despacho_real': fecha_despacho_real,
           'ETD': ETD,
@@ -254,50 +214,62 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
 
   # ----- 5. Calculo FECHAS
   dict_leftover_date = {}
+  # Quiero todas las llaves que llegan en N, N+1 y N+2
+  dict_ETA_sin_venta = {}
 
   print("--- %s ETA 5.5  ---" % (time.time() - start_time))
   for i, row in enumerate(ws.iter_rows(3, ws.max_row - 1, values_only=True), 3):
+    sector = row[0]
     canal_distribucion = row[1]
     oficina = row[3]
     material = row[4]
+    llave = row[5]
     ETA = row[6]
     kilos = ws[f'H{i}'].value
     ws[f'H{i}'].value = ''
+    key_month_year = f'{ETA.strftime("%m")}.{ETA.year}'
 
     if canal_distribucion == "Venta Directa":
-      if ETA.month == month_1.month:
+      if (ETA.month, ETA.year) == (month_1.month, month_1.year):
         ws[f'H{i}'].value = kilos
         ws[f'R{i}'].value = kilos
-      elif ETA.month == month_2.month:
+      elif (ETA.month, ETA.year)  == (month_2.month, month_2.year):
         ws[f'I{i}'].value = kilos
         ws[f'S{i}'].value = kilos
-      elif ETA.month == month_3.month:
+      elif (ETA.month, ETA.year)  == (month_3.month, month_3.year):
         ws[f'J{i}'].value = kilos
         ws[f'T{i}'].value = kilos
-      else:
+      elif (ETA.month, ETA.year) == (month_3.month, month_3.year):
         ws[f'K{i}'].value = kilos
         ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
         ws[f'U{i}'].value = kilos
         ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
+    
+    # CHECK ALL THE KEYS THAT ARE ON THE 3 MONTHS SELECTED PERIOD
+    start_month_1 = date(month_1.year, month_1.month, 1)
+    start_month_4 = date(month_4.year, month_4.month, 1)
+    # key_month_year = f'{tiempo_final_pes.strftime("%m")}.{tiempo_final_pes.year}'
+    # if key_month_year in dict_ETA_sin_venta.keys():
+    if llave not in dict_ETA_sin_venta.keys() and start_month_1 <= ETA < start_month_4:
+      dict_ETA_sin_venta[llave] = {
+        'canal_distribucion': canal_distribucion,
+        'oficina': oficina,
+        'material': material,
+        'sector': sector,
+      }
+        
 
     # ----- OPTIMISTA -----
     if canal_distribucion == "Venta Local":
       lead_time_opt = dict_lead_time['optimista'][canal_distribucion][oficina.lower()]
-      LT_1 = lead_time_opt['Planta']
-      LT_2 = lead_time_opt['Puerto']
-      tiempo_final_opt = ETA + timedelta(LT_1) + timedelta(LT_2)
-      ws[f'L{i}'].value = LT_1
-      ws[f'M{i}'].value = ETA + timedelta(LT_1)
-      ws[f'N{i}'].value = LT_2
-
-      if canal_distribucion == 'Venta Local':
-        LT_3 = lead_time_opt['Agua']
-        LT_4 = lead_time_opt['Destino']
-        LT_5 = lead_time_opt['Almacen']
-        tiempo_final_opt = ETA + timedelta(LT_4) + timedelta(LT_5)
-        ws[f'L{i}'].value = LT_4
-        ws[f'M{i}'].value = ETA + timedelta(LT_4)
-        ws[f'N{i}'].value = LT_5
+      LT_3 = lead_time_opt['Agua']
+      LT_4 = lead_time_opt['Destino']
+      LT_5 = lead_time_opt['Almacen']
+      tiempo_final_opt = ETA + timedelta(LT_4) + timedelta(LT_5)
+      ws[f'L{i}'].value = LT_4
+      ws[f'M{i}'].value = ETA + timedelta(LT_4)
+      ws[f'N{i}'].value = LT_5
+      ws[f'O{i}'].value = tiempo_final_opt
         
       if tiempo_final_opt.month == month_1.month:
         ws[f'H{i}'].value = kilos
@@ -308,28 +280,20 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
       elif tiempo_final_opt.month == month_3.month:
         ws[f'J{i}'].value = kilos
       
-      else:
+      elif tiempo_final_opt.month == month_4.month:
         ws[f'K{i}'].value = kilos
         ws[f'O{i}'].fill = PatternFill("solid", fgColor=yellow)
-
-      ws[f'O{i}'].value = tiempo_final_opt
     
       # ----- PESIMISTA -----
       lead_time_pes = dict_lead_time['pesimista'][canal_distribucion][oficina.lower()]
-      LT_1 = lead_time_pes['Planta']
-      LT_2 = lead_time_pes['Puerto']
-      tiempo_final_pes = ETA + timedelta(LT_1) + timedelta(LT_2)
-      ws[f'V{i}'].value = LT_1
-      ws[f'W{i}'].value = ETA + timedelta(LT_1)
-      ws[f'X{i}'].value = LT_2
-
-      if canal_distribucion == 'Venta Local':
-        LT_3 = lead_time_pes['Agua']
-        LT_4 = lead_time_pes['Destino']
-        LT_5 = lead_time_pes['Almacen']
-        ws[f'V{i}'].value = LT_4
-        ws[f'W{i}'].value = ETA + timedelta(LT_4)
-        ws[f'X{i}'].value = LT_5
+      tiempo_final_pes = ETA + timedelta(LT_4) + timedelta(LT_5)
+      LT_3 = lead_time_pes['Agua']
+      LT_4 = lead_time_pes['Destino']
+      LT_5 = lead_time_pes['Almacen']
+      ws[f'V{i}'].value = LT_4
+      ws[f'W{i}'].value = ETA + timedelta(LT_4)
+      ws[f'X{i}'].value = LT_5
+      ws[f'Y{i}'].value = tiempo_final_pes
 
       if tiempo_final_pes.month == month_1.month:
         ws[f'R{i}'].value = kilos
@@ -340,11 +304,22 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
       elif tiempo_final_pes.month == month_3.month:
         ws[f'T{i}'].value = kilos
       
-      else:
+      elif tiempo_final_pes.month == month_4.month:
         ws[f'U{i}'].value = kilos
         ws[f'U{i}'].fill = PatternFill("solid", fgColor=yellow)
-
-      ws[f'Y{i}'].value = tiempo_final_pes
+      
+      # CHECK ALL THE KEYS THAT ARE ON THE 3 MONTHS SELECTED PERIOD
+      start_month_1 = date(month_1.year, month_1.month, 1)
+      start_month_4 = date(month_4.year, month_4.month, 1)
+      # key_month_year = f'{tiempo_final_pes.strftime("%m")}.{tiempo_final_pes.year}'
+      # if key_month_year in dict_ETA_sin_venta.keys():
+      if llave not in dict_ETA_sin_venta.keys() and start_month_1 <= tiempo_final_pes < start_month_4:
+        dict_ETA_sin_venta[llave] = {
+          'canal_distribucion': canal_distribucion,
+          'oficina': oficina,
+          'material': material,
+          'sector': sector,
+        }
 
     # ---- Calendario leftover days for month
       for tiempo_final in [tiempo_final_pes, tiempo_final_opt]:
@@ -389,10 +364,66 @@ def create_ETA(ws, dict_lead_time, date_selected_month, dict_cierre_venta, dict_
         ws[f'AA{i}'].value = 'SI'
       else:
         ws[f'AA{i}'].value = f'Mes {tiempo_final_pes.month + 1}'
+    
+    # NUMBER FORMAT
+    ws[f'H{i}'].number_format = BUILTIN_FORMATS[3]
+    ws[f'I{i}'].number_format = BUILTIN_FORMATS[3]
+    ws[f'J{i}'].number_format = BUILTIN_FORMATS[3]
+    ws[f'K{i}'].number_format = BUILTIN_FORMATS[3]
 
+    ws[f'L{i}'].number_format = BUILTIN_FORMATS[4]
+    ws[f'N{i}'].number_format = BUILTIN_FORMATS[4]
+
+    ws[f'R{i}'].number_format = BUILTIN_FORMATS[3]
+    ws[f'S{i}'].number_format = BUILTIN_FORMATS[3]
+    ws[f'T{i}'].number_format = BUILTIN_FORMATS[3]
+    ws[f'U{i}'].number_format = BUILTIN_FORMATS[3]
+
+    ws[f'V{i}'].number_format = BUILTIN_FORMATS[4]
+    ws[f'X{i}'].number_format = BUILTIN_FORMATS[4]
+
+    ws[f'Q{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    ws[f'AA{i}'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    # # STYLES
+    # thin = Side(border_style="thin", color=white)
+    # line_blue = Side(border_style="thin", color=blue)
+
+    # ws[f'A{i}'].font = Font(bold=False, color=blue)
+    # ws[f'A{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'A{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+    # ws[f'B{i}'].font = Font(bold=False, color=blue)
+    # ws[f'B{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'B{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+    # ws[f'C{i}'].font = Font(bold=False, color=blue)
+    # ws[f'C{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'C{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+    # ws[f'D{i}'].font = Font(bold=False, color=blue)
+    # ws[f'D{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'D{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+    # ws[f'E{i}'].font = Font(bold=False, color=blue)
+    # ws[f'E{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'E{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+    # ws[f'F{i}'].font = Font(bold=False, color=blue)
+    # ws[f'F{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'F{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+
+    # ws[f'G{i}'].font = Font(bold=False, color=blue)
+    # ws[f'G{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+    # ws[f'G{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+  
+  # dict_ETAS = dict_confirmados | dict_logistica
+  # return dict_ETAS
   
   print("--- %s ETA 5 ---" % (time.time() - start_time))
 # ----- Corremos estilos y cerramos
   run_styles(ws)
   # run_number_format(ws)
   print("--- %s ETA 6 ---" % (time.time() - start_time))
+
+  return dict_ETA_sin_venta

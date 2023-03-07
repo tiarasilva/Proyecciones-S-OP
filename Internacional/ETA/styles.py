@@ -9,13 +9,6 @@ start_time = time.time()
 def run_styles(ws):
   thin = Side(border_style="thin", color=white)
 
-  for letter in range(1, 8):
-    letter = get_column_letter(letter)
-    a_col = ws.column_dimensions[letter]
-    a_col.font = Font(bold=False, color=blue)
-    a_col.fill = PatternFill("solid", fgColor=lightlightBlue)
-    a_col.border = Border(top=thin, left=thin, right=thin, bottom=thin)
-
   for i in range(1, ws.max_column + 1):
     ws[f'{get_column_letter(i)}2'].font = Font(bold=True, color=white)
     ws[f'{get_column_letter(i)}2'].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
