@@ -13,7 +13,7 @@ a = Analysis(
     ['generar_proyeccion.py'],
     pathex=[],
     binaries=[],
-    datas=[('Inputs/Parametros.xlsx', 'Inputs'), ('Inputs/Puerto Chile.xlsx', 'Inputs'), ('Inputs/Venta - Plan.xlsx', 'Inputs'), ('Inputs/stock.xlsx', 'Inputs'), ('Inputs/ETA/Distribucion+Logistica - Pedidos AP-Confirmados.xlsx', 'Inputs/ETA'), ('Inputs/ETA/Logística - Pedidos Planta-Puerto-Embarcado.xlsx', 'Inputs/ETA'), ('Inputs/Asignaciones.xlsx', 'Inputs'), ('Inputs/Produccion faltante.xlsx', 'Inputs'), ('Img/Notice.png', 'Img')],
+    datas=[('Inputs/Parametros.xlsx', 'Inputs'), ('Inputs/Puerto Chile.xlsx', 'Inputs'), ('Inputs/Venta - Plan.xlsx', 'Inputs'), ('Inputs/stock.xlsx', 'Inputs'), ('Inputs/ETA/Distribucion+Logistica - Pedidos AP-Confirmados.xlsx', 'Inputs/ETA'), ('Inputs/ETA/Logística - Pedidos Planta-Puerto-Embarcado.xlsx', 'Inputs/ETA'), ('Inputs/Asignaciones.xlsx', 'Inputs'), ('Inputs/Produccion faltante.xlsx', 'Inputs'), ('Img/Notice.png', 'Img'), ('Img/ico.ico', 'Img')],
     hiddenimports=hiddenimports,
     hookspath=['.'],
     hooksconfig={},
