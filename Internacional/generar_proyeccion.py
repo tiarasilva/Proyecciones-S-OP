@@ -223,16 +223,16 @@ ws.append({
   12: 'Plan - Prod. actual',              # L
   13: 'ETA Pesimista',                    # M
   14: 'Puerto Chile Pes.',                # N
-  15: 'Puerto Oficina',                   # O
-  16: 'Almacen oficina',                  # P
-  17: 'Proy. Pesimista',                  # Q
+  15: 'Puerto Oficina Pes.',              # O
+  16: 'Almacen oficina Pes.',             # P
+  17: 'PROY. Pesimista',                  # Q
 
   18: 'Plan - Prod. actual',              # R
   19: 'ETA Optimista',                    # S
   20: 'Puerto Chile Opt.',                # T
-  21: 'Puerto Oficina',                   # U
-  22: 'Almacen oficina',                  # V
-  23: 'Proy. Optimista',                  # W
+  21: 'Puerto Oficina Opt.',              # U
+  22: 'Almacen oficina Opt.',             # V
+  23: 'PROY. Optimista',                  # W
 
   24: 'RV Produccion',                    # X
   25: 'RV Venta',                         # Y
@@ -310,14 +310,19 @@ print("--- %s 5. ---" % (time.time() - start_time))
 dict_stock = {}
 
 for row in ws_stock_oficina.iter_rows(4, ws_stock_oficina.max_row, values_only=True):
-  sector = row[0]
-  oficina = row[1]
-  material = row[2]
-  descripcion = row[3]
-  nivel_2 = row[4]
+  month_year = row[0]
+  sector = row[1]
+  oficina = row[2]
+  material = row[3]
+  descripcion = row[4]
+  nivel_2 = row[5]
   llave = f'{oficina.lower()}{material}'
-  puerto_oficina = row[8] + row[12]
-  almacen = row[16] + row[20]
+  # puerto_oficina = row[9] + row[13]
+  # almacen = row[17] + row[21]
+  # Stock solo liberado
+  puerto_oficina = row[9]
+  almacen = row[17]
+
   dict_stock[llave] = { 'sector': sector, 'oficina': oficina, 'material': material, 'descripcion': descripcion, 'nivel_2': nivel_2, 'Puerto oficina': puerto_oficina, 'Almacen': almacen }
 
 # ----- 7. Producción faltante
@@ -541,7 +546,7 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
     ws[f'AG{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$J$3:J{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AJ$5) + SUMIFS('{sheet_name_ETA}'!$I$3:I{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AJ$8)"
 
     # -- Stock Puerto Oficina y Almacen
-    if llave in dict_stock:
+    if llave in dict_stock.keys():
       stock_puerto_oficina = dict_stock[llave]['Puerto oficina'] or 0
       stock_almacen = dict_stock[llave]['Almacen'] or 0
       ws[f'O{i}'].value = f"={stock_puerto_oficina} * ({leftover_days} / {productive_days})"
@@ -562,13 +567,13 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
     # + Stock en el inventario
     # + Stock producido hoy
     # -Stock por despachar
-    ws[f'Q{i}'].value = f'=H{i} + P{i} + M{i}'                                         # PESIMISTA --> Venta Actual + Almacen oficina + ETA Pesimista n
+    ws[f'Q{i}'].value = f'=H{i} + P{i} + MAX(M{i} - H{i} - P{i} + O{i},0)'             # PESIMISTA --> Venta Actual + Almacen oficina + ETA Pesimista n
     ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'W{i}'].value = f'=H{i} + V{i} + S{i}'                                         # OPTIMISTA --> Venta Actual + Almacen oficina + ETA Optimista n
+    ws[f'W{i}'].value = f'=H{i} + V{i} + MAX(S{i} - H{i} - V{i} - U{i},0)'             # OPTIMISTA --> Venta Actual + Almacen oficina + ETA Optimista n                                        # OPTIMISTA --> Venta Actual + Almacen oficina + ETA Optimista n
     ws[f'W{i}'].fill = PatternFill("solid", fgColor=yellow)
     
     if leftover_days >= last_stop_LT:
-      ws[f'W{i}'].value = f'=H{i} + V{i} + S{i} + U{i}'                                # OPTIMISTA --> + Puerto Oficina
+      ws[f'W{i}'].value = f'=H{i} + V{i} + U{i} + MAX(S{i} - H{i} - V{i} - U{i},0)'                                # OPTIMISTA --> + Puerto Oficina
       ws[f'W{i}'].fill = PatternFill("solid", fgColor=lightGreen)
   
   # VENTA DIRECTA
@@ -583,9 +588,9 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
     ws[f'AG{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$J$3:J{ETA_maxRow})"
 
     # -- Proyecciones mes N
-    ws[f'Q{i}'].value = f'=H{i} + M{i} + N{i} + L{i}'                                  # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
+    ws[f'Q{i}'].value = f'=H{i} + N{i} + MAX(M{i} - H{i} - N{i}, 0)'                   # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
     ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'W{i}'].value = f'=H{i} + S{i} + R{i} + T{i}'                                  # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
+    ws[f'W{i}'].value = f'=H{i} + T{i} + MAX(S{i} - H{i} - T{i}, 0)'                   # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
     ws[f'W{i}'].fill = PatternFill("solid", fgColor=yellow)
 
   # ----- Styles
@@ -714,7 +719,7 @@ def add_line(ws, i, llave, value, canal_distribucion, dict_prod_faltante):
     ws[f'AG{i}'].value = f"=SUMIFS('{sheet_name_ETA}'!$J$3:J{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AJ$5) + SUMIFS('{sheet_name_ETA}'!$I$3:I{ETA_maxRow},'{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$Q$3:Q{ETA_maxRow},'{sheet_name}'!$AJ$8)"
 
     # -- 12.8. Stock Puerto Oficina y Almacen
-    if llave in dict_stock:
+    if llave in dict_stock.keys():
       stock_puerto_oficina = dict_stock[llave]['Puerto oficina'] or 0
       stock_almacen = dict_stock[llave]['Almacen'] or 0
       ws[f'O{i}'].value = f"={stock_puerto_oficina} * ({leftover_days} / {productive_days})"
@@ -724,13 +729,13 @@ def add_line(ws, i, llave, value, canal_distribucion, dict_prod_faltante):
       ws[f'V{i}'].value = f"={stock_almacen} * ({leftover_days} / {productive_days})"
 
     # -- 12.9. Proyecciones mes N
-    ws[f'Q{i}'].value = f'=H{i} + P{i} + M{i}'                                         # PESIMISTA --> Venta Actual + Almacen oficina + ETA Pesimista n
+    ws[f'Q{i}'].value = f'=H{i} + N{i} + MAX(M{i} - H{i} - N{i}, 0)'                   # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
     ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'W{i}'].value = f'=H{i} + V{i} + S{i}'                                         # OPTIMISTA --> Venta Actual + Almacen oficina + ETA Optimista n
+    ws[f'W{i}'].value = f'=H{i} + T{i} + MAX(S{i} - H{i} - T{i}, 0)'                   # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
     ws[f'W{i}'].fill = PatternFill("solid", fgColor=yellow)
     
     if leftover_days >= last_stop_LT:
-      ws[f'W{i}'].value = f'=H{i} + V{i} + S{i} + U{i}'                                # OPTIMISTA --> + Puerto Oficina
+      ws[f'W{i}'].value = f'=H{i} + V{i} + U{i} + MAX(S{i} - H{i} - V{i} - U{i},0)'                                # OPTIMISTA --> + Puerto Oficina
       ws[f'W{i}'].fill = PatternFill("solid", fgColor=lightGreen)
   
   # VENTA DIRECTA
@@ -745,9 +750,9 @@ def add_line(ws, i, llave, value, canal_distribucion, dict_prod_faltante):
     ws[f'AG{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$J$3:J{ETA_maxRow})"
 
     # -- 12.10. Proyecciones mes N
-    ws[f'Q{i}'].value = f'=H{i} + M{i} + N{i} + L{i}'                                  # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
+    ws[f'Q{i}'].value = f'=H{i} + N{i} + L{i} + MAX(M{i} - H{i}, 0)'                   # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
     ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'W{i}'].value = f'=H{i} + S{i} + R{i} + T{i}'                                  # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
+    ws[f'W{i}'].value = f'=H{i} + R{i} + T{i} + MAX(S{i} - H{i}, 0)'                     # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
     ws[f'W{i}'].fill = PatternFill("solid", fgColor=yellow)
   
   # STYLES 
@@ -800,19 +805,20 @@ for i, (key, value) in enumerate(dict_stock.copy().items(), ws.max_row + 1):
   oficina = value['oficina']
   material = value['material']
   llave = f'{oficina.lower()}{material}'
-
   porcentaje = dict_porcentaje_produccion[oficina.lower()]
-  lead_time_opt = dict_lead_time['optimista'][canal_distribucion][oficina.lower()]
-  lead_time_pes = dict_lead_time['pesimista'][canal_distribucion][oficina.lower()]
-
+  
   canal_distribucion = 'Venta Directa'
   leftover_days = dict_leftover_country['chile']
   last_stop_LT = round(lead_time_opt['Puerto'], 2)
-  
+
   if oficina.lower() in dict_lead_time['optimista']['Venta Local'].keys():
     canal_distribucion = 'Venta Local'
     leftover_days = dict_leftover_country[oficina.lower()]
-    last_stop_LT = round(lead_time_opt['Destino'], 2)
+
+  
+  lead_time_opt = dict_lead_time['optimista'][canal_distribucion][oficina.lower()]
+  lead_time_pes = dict_lead_time['pesimista'][canal_distribucion][oficina.lower()]
+  last_stop_LT = round(lead_time_opt['Destino'], 2)
   
   if llave in dict_ETA_sin_venta.keys():
     dict_ETA_sin_venta.pop(llave)
@@ -820,14 +826,13 @@ for i, (key, value) in enumerate(dict_stock.copy().items(), ws.max_row + 1):
   add_line(ws, i, llave, value, canal_distribucion, dict_prod_faltante)
 
 # ----- 13. ETAS SIN VENTA
-# print(dict_ETA_sin_venta['agrosuper shanghai1012503'])
-for i, (key, value) in enumerate(dict_ETA_sin_venta.items(), ws.max_row + 1):
-  canal_distribucion = value['canal_distribucion']
-  oficina = value['oficina']
-  material = value['material']
-  sector = value['sector']
+# for i, (key, value) in enumerate(dict_ETA_sin_venta.items(), ws.max_row + 1):
+#   canal_distribucion = value['canal_distribucion']
+#   oficina = value['oficina']
+#   material = value['material']
+#   sector = value['sector']
 
-  add_line(ws, i, key, value, canal_distribucion, dict_prod_faltante)
+#   add_line(ws, i, key, value, canal_distribucion, dict_prod_faltante)
 
 
 

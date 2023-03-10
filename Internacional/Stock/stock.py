@@ -13,25 +13,26 @@ def stock(ws, dict_lead_time, filename_dias):
   dict_message = {'Puerto Oficina': {}, 'Almacen': {}}
 
   ws.append({
-    6: 'Puerto Oficina', 
-    14: 'Almacén Oficina'
+    7: 'Puerto Oficina', 
+    15: 'Almacén Oficina'
   })
 
   ws.append({
-    6: 'Stock liberado', 10: 'Stock no liberado',    # Puerto Oficina
-    14: 'Stock liberado', 18: 'Stock no liberado',   # Almacen Oficina
+    7: 'Stock liberado', 11: 'Stock no liberado',    # Puerto Oficina
+    15: 'Stock liberado', 19: 'Stock no liberado',   # Almacen Oficina
   })
   
   ws.append({
-    1: 'Sector', 
-    2: 'Oficina', 
-    3: 'Material', 
-    4: 'Descripción', 
-    5: 'Nivel 2', 
-    6: 'Total KG', 7: 'Nº Días de Antigüedad Centro', 8: 'Nº Días de Antigüedad Oficina', 9: 'Status considerado',
-    10: 'Total KG', 11: 'Nº Días de Antigüedad Centro', 12: 'Nº Días de Antigüedad Oficina', 13: 'Status considerado',
-    14: 'Total KG', 15: 'Nº Días de Antigüedad Centro', 16: 'Nº Días de Antigüedad Oficina', 17: 'Status considerado',
-    18: 'Total KG', 19: 'Nº Días de Antigüedad Centro', 20: 'Nº Días de Antigüedad Oficina', 21: 'Status considerado',
+    1: 'Fecha',
+    2: 'Sector', 
+    3: 'Oficina', 
+    4: 'Material', 
+    5: 'Descripción', 
+    6: 'Nivel 2', 
+    7: 'Total KG', 8: 'Nº Días de Antigüedad Centro', 9: 'Nº Días de Antigüedad Oficina', 10: 'Status considerado',
+    11: 'Total KG', 12: 'Nº Días de Antigüedad Centro', 13: 'Nº Días de Antigüedad Oficina', 14: 'Status considerado',
+    15: 'Total KG', 16: 'Nº Días de Antigüedad Centro', 17: 'Nº Días de Antigüedad Oficina', 18: 'Status considerado',
+    19: 'Total KG', 20: 'Nº Días de Antigüedad Centro', 21: 'Nº Días de Antigüedad Oficina', 22: 'Status considerado',
   })
 
   # ----- Días antiguedad Stock
@@ -77,23 +78,24 @@ def stock(ws, dict_lead_time, filename_dias):
     llave = f'{oficina.lower()}{material}'
 
     if oficina.lower() in dict_lead_time['optimista']['Venta Local'].keys():
-      ws[f'A{i}'].value = sector
-      ws[f'B{i}'].value = oficina
-      ws[f'C{i}'].value = int(material)
-      ws[f'D{i}'].value = descripcion
-      ws[f'E{i}'].value = nivel_2
-      ws[f'F{i}'].value = stock_oficina_lib or 0
-      ws[f'G{i}'].value = dias_oficina_centro_lib or 0
-      ws[f'H{i}'].value = dias_oficina_lib or 0
-      ws[f'J{i}'].value = stock_oficina_no_lib or 0
-      ws[f'K{i}'].value = dias_oficina_centro_no_lib or 0
-      ws[f'L{i}'].value = dias_oficina_no_lib or 0
-      ws[f'N{i}'].value = stock_almacen_lib or 0
-      ws[f'O{i}'].value = dias_almacen_centro_lib or 0
-      ws[f'P{i}'].value = dias_almacen_lib or 0
-      ws[f'R{i}'].value = stock_almacen_no_lib or 0
-      ws[f'S{i}'].value = dias_almacen_centro_no_lib or 0
-      ws[f'T{i}'].value = dias_almacen_no_lib or 0
+      ws[f'A{i}'].value = month_year
+      ws[f'B{i}'].value = sector
+      ws[f'C{i}'].value = oficina
+      ws[f'D{i}'].value = int(material)
+      ws[f'E{i}'].value = descripcion
+      ws[f'F{i}'].value = nivel_2
+      ws[f'G{i}'].value = stock_oficina_lib or 0
+      ws[f'H{i}'].value = dias_oficina_centro_lib or 0
+      ws[f'I{i}'].value = dias_oficina_lib or 0
+      ws[f'K{i}'].value = stock_oficina_no_lib or 0
+      ws[f'L{i}'].value = dias_oficina_centro_no_lib or 0
+      ws[f'M{i}'].value = dias_oficina_no_lib or 0
+      ws[f'O{i}'].value = stock_almacen_lib or 0
+      ws[f'P{i}'].value = dias_almacen_centro_lib or 0
+      ws[f'Q{i}'].value = dias_almacen_lib or 0
+      ws[f'T{i}'].value = stock_almacen_no_lib or 0
+      ws[f'U{i}'].value = dias_almacen_centro_no_lib or 0
+      ws[f'V{i}'].value = dias_almacen_no_lib or 0
 
       today = datetime.now()
       holidays_country = holidays.CL(years=today.year)
@@ -124,50 +126,97 @@ def stock(ws, dict_lead_time, filename_dias):
       # Stock liberado
       dias_oficina = dias_oficina_centro_lib + leftover_days
       if dias_oficina >= lead_time['Destino']:
-        ws[f'I{i}'].value = stock_oficina_lib
-        ws[f'I{i}'].font = Font(bold=True, color=green)
-        ws[f'I{i}'].fill = PatternFill("solid", fgColor=lightGreen)
+        ws[f'J{i}'].value = stock_oficina_lib
+        ws[f'J{i}'].font = Font(bold=True, color=green)
+        ws[f'J{i}'].fill = PatternFill("solid", fgColor=lightGreen)
       else:
-        ws[f'I{i}'].value = 0
-        ws[f'I{i}'].font = Font(bold=True, color=darkRed)
-        ws[f'I{i}'].fill = PatternFill("solid", fgColor=lightRed)
+        ws[f'J{i}'].value = 0
+        ws[f'J{i}'].font = Font(bold=True, color=darkRed)
+        ws[f'J{i}'].fill = PatternFill("solid", fgColor=lightRed)
       
       # Stock no liberado
       dias_oficina = dias_oficina_centro_no_lib + leftover_days
       if dias_oficina >= lead_time['Destino']:
-        ws[f'M{i}'].value = stock_oficina_no_lib
-        ws[f'M{i}'].font = Font(bold=True, color=green)
-        ws[f'M{i}'].fill = PatternFill("solid", fgColor=lightGreen)
+        ws[f'N{i}'].value = stock_oficina_no_lib
+        ws[f'N{i}'].font = Font(bold=True, color=green)
+        ws[f'N{i}'].fill = PatternFill("solid", fgColor=lightGreen)
       else:
-        ws[f'M{i}'].value = 0
-        ws[f'M{i}'].font = Font(bold=True, color=darkRed)
-        ws[f'M{i}'].fill = PatternFill("solid", fgColor=lightRed)
+        ws[f'N{i}'].value = 0
+        ws[f'N{i}'].font = Font(bold=True, color=darkRed)
+        ws[f'N{i}'].fill = PatternFill("solid", fgColor=lightRed)
       
       # ALMACEN OFICINA
       # Stock liberado
       dias_almacen = dias_almacen_lib + leftover_days
       if dias_almacen >= lead_time['Almacen']:
-        ws[f'Q{i}'].value = stock_almacen_lib
-        ws[f'Q{i}'].font = Font(bold=True, color=green)
-        ws[f'Q{i}'].fill = PatternFill("solid", fgColor=lightGreen)
+        ws[f'R{i}'].value = stock_almacen_lib
+        ws[f'R{i}'].font = Font(bold=True, color=green)
+        ws[f'R{i}'].fill = PatternFill("solid", fgColor=lightGreen)
       else:
-        ws[f'Q{i}'].value = 0
-        ws[f'Q{i}'].font = Font(bold=True, color=darkRed)
-        ws[f'Q{i}'].fill = PatternFill("solid", fgColor=lightRed)
+        ws[f'R{i}'].value = 0
+        ws[f'R{i}'].font = Font(bold=True, color=darkRed)
+        ws[f'R{i}'].fill = PatternFill("solid", fgColor=lightRed)
       
       dias_almacen = dias_almacen_no_lib + leftover_days
       if dias_almacen >= lead_time['Almacen']:
-        ws[f'U{i}'].value = stock_almacen_no_lib
-        ws[f'U{i}'].font = Font(bold=True, color=green)
-        ws[f'U{i}'].fill = PatternFill("solid", fgColor=lightGreen)
+        ws[f'V{i}'].value = stock_almacen_no_lib
+        ws[f'V{i}'].font = Font(bold=True, color=green)
+        ws[f'V{i}'].fill = PatternFill("solid", fgColor=lightGreen)
       else:
-        ws[f'U{i}'].value = 0
-        ws[f'U{i}'].font = Font(bold=True, color=darkRed)
-        ws[f'U{i}'].fill = PatternFill("solid", fgColor=lightRed)
+        ws[f'V{i}'].value = 0
+        ws[f'V{i}'].font = Font(bold=True, color=darkRed)
+        ws[f'V{i}'].fill = PatternFill("solid", fgColor=lightRed)
+      
+      # STYLES
+      line_blue = Side(border_style="thin", color=blue)
+      line_grey = Side(border_style="thin", color=grey)
+      thin = Side(border_style="thin", color=white)
+
+      ws[f'G{i}'].border = Border(left=line_blue)
+      ws[f'G{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'H{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'I{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'J{i}'].number_format = BUILTIN_FORMATS[3]
+      
+      ws[f'K{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'L{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'M{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'N{i}'].number_format = BUILTIN_FORMATS[3]
+
+      ws[f'O{i}'].border = Border(left=line_blue)
+      ws[f'O{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'P{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'Q{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'R{i}'].number_format = BUILTIN_FORMATS[3]
+
+      ws[f'S{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'T{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'U{i}'].number_format = BUILTIN_FORMATS[2]
+      ws[f'V{i}'].number_format = BUILTIN_FORMATS[3]
+      ws[f'W{i}'].border = Border(left=line_blue)
+
+      ws[f'A{i}'].font = Font(bold=False, color=blue)
+      ws[f'B{i}'].font = Font(bold=False, color=blue)
+      ws[f'C{i}'].font = Font(bold=False, color=blue)
+      ws[f'D{i}'].font = Font(bold=False, color=blue)
+      ws[f'E{i}'].font = Font(bold=False, color=blue)
+      ws[f'F{i}'].font = Font(bold=False, color=blue)
+      ws[f'A{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+      ws[f'B{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+      ws[f'C{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+      ws[f'D{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+      ws[f'E{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+      ws[f'F{i}'].fill = PatternFill("solid", fgColor=lightlightBlue)
+      ws[f'A{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+      ws[f'B{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+      ws[f'C{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+      ws[f'D{i}'].border = Border(top=thin, left=thin, right=thin, bottom=thin)
+      ws[f'E{i}'].border = Border(top=thin, left=thin, bottom=thin)
       i += 1  
+
 
   wb_dias_stock.close()    
 
   # ----- Cerramos y guardamos
   run_styles(ws)
-  run_number_format(ws)
+  # run_number_format(ws)
