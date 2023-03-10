@@ -13,7 +13,6 @@ filename_RV = 'Inputs/RV final.xlsx'
 path_img = "Img/Notice.png"
 
 # BuildETA filenames
-filename_distribucion_II = 'Inputs/ETA/Distribución Internacional - Terrestres.xlsx'
 filename_pedidos_confirmados = 'Inputs/ETA/Distribucion+Logistica - Pedidos AP-Confirmados.xlsx'
 filename_logistica = 'Inputs/ETA/Logística - Pedidos Planta-Puerto-Embarcado.xlsx'
 filename_PI = 'Inputs/ETA/Planificacion Industrial - Produccion-Plan Congelado.xlsx'

@@ -588,9 +588,15 @@ for i, row in enumerate(ws.iter_rows(3, max_row, values_only = True), 3):
     ws[f'AG{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$J$3:J{ETA_maxRow})"
 
     # -- Proyecciones mes N
-    ws[f'Q{i}'].value = f'=H{i} + N{i} + MAX(M{i} - H{i} - N{i}, 0)'                   # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
+    if leftover_days > 0:
+      LT_pes = lead_time_pes['Puerto']
+      LT_opt = lead_time_opt['Puerto']
+      pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
+      pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
+
+    ws[f'Q{i}'].value = f'=H{i} + {pct_prod_pes} * N{i} + MAX(M{i} - H{i} - ({pct_prod_pes} * N{i}), 0)'                   # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
     ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'W{i}'].value = f'=H{i} + T{i} + MAX(S{i} - H{i} - T{i}, 0)'                   # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
+    ws[f'W{i}'].value = f'=H{i} + {pct_prod_opt} * T{i} + MAX(S{i} - H{i} - ({pct_prod_pes} * T{i}), 0)'                   # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
     ws[f'W{i}'].fill = PatternFill("solid", fgColor=yellow)
 
   # ----- Styles
@@ -750,9 +756,16 @@ def add_line(ws, i, llave, value, canal_distribucion, dict_prod_faltante):
     ws[f'AG{i}'].value = f"=SUMIF('{sheet_name_ETA}'!$F$3:F{ETA_maxRow},'{sheet_name}'!C{i},'{sheet_name_ETA}'!$J$3:J{ETA_maxRow})"
 
     # -- 12.10. Proyecciones mes N
-    ws[f'Q{i}'].value = f'=H{i} + N{i} + L{i} + MAX(M{i} - H{i}, 0)'                   # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
+    if leftover_days > 0:
+      LT_pes = lead_time_pes['Puerto']
+      LT_opt = lead_time_opt['Puerto']
+      
+      pct_prod_pes = max(leftover_days - LT_pes, 0) / leftover_days
+      pct_prod_opt = max(leftover_days - LT_opt, 0) / leftover_days
+
+    ws[f'Q{i}'].value = f'=H{i} + {pct_prod_pes} * N{i} + MAX(M{i} - H{i} - ({pct_prod_pes} * N{i}), 0)'                   # PESIMISTA --> Venta Actual + ETA + Puerto Chile Pes. + (Plan - Prod. actual)
     ws[f'Q{i}'].fill = PatternFill("solid", fgColor=yellow)
-    ws[f'W{i}'].value = f'=H{i} + R{i} + T{i} + MAX(S{i} - H{i}, 0)'                     # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
+    ws[f'W{i}'].value = f'=H{i} + {pct_prod_opt} * T{i} + MAX(S{i} - H{i} - ({pct_prod_pes} * T{i}), 0)'                   # OPTIMISTA --> Venta Actual + ETA + Puerto Chile Opt. + (Plan - Prod. actual)
     ws[f'W{i}'].fill = PatternFill("solid", fgColor=yellow)
   
   # STYLES 
